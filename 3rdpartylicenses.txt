@@ -71,7 +71,7 @@ THE SOFTWARE.
 MIT
 MIT
 
-marked@0.3.6
+marked@0.3.12
 MIT
 Copyright (c) 2011-2014, Christopher Jeffrey (https://github.com/chjj/)
 
