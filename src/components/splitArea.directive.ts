@@ -50,6 +50,24 @@ export class SplitAreaDirective implements OnInit, OnDestroy {
         return this._minSize;
     }
 
+
+    /**
+     * minimum size (in pixels) of the splitArea
+     */
+    private _minSizePx: number;
+
+    /**
+     * minimum size (in pixels) of the splitArea
+     */
+    @Input() set minSizePx(v: number) {
+        console.log("set minWidthPx", v);
+        this._minSizePx = v;
+    }
+
+    get minSizePx(): number {
+        return this._minSizePx;
+    }
+
     ////
 
     private _visible: boolean = true;
