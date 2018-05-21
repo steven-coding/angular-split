@@ -1,0 +1,1 @@
+{"version":3,"file":"IPoint.js","sourceRoot":"","sources":["IPoint.ts"],"names":[],"mappings":"","sourcesContent":["\r\nexport interface IPoint {\r\n    x: number;\r\n    y: number;\r\n}"]}

@@ -62,6 +62,8 @@ export class SplitAreaDirective implements OnInit, OnDestroy {
     @Input() set minSizePx(v: number) {
         console.log("set minWidthPx", v);
         this._minSizePx = v;
+
+        this.split.updateArea(this, false, true);
     }
 
     get minSizePx(): number {
@@ -143,7 +145,7 @@ export class SplitAreaDirective implements OnInit, OnDestroy {
         this.renderer.setStyle(this.elRef.nativeElement, 'order', value);
     }
     
-    public setStyleFlexbasis(value: string, isDragging: boolean): void {
+    public setStyleFlexbasis(value: string, isDragging: boolean, direction: 'horizontal' | 'vertical'): void {
         // If component not yet initialized or gutter being dragged, disable transition
         if(this.split.isViewInitialized === false || isDragging === true) {
             this.setStyleTransition(false);
@@ -153,7 +155,23 @@ export class SplitAreaDirective implements OnInit, OnDestroy {
             this.setStyleTransition(this.split.useTransition);
         }
 
+        if (direction === 'horizontal') {
+            this.renderer.removeStyle(this.elRef.nativeElement, "width");
+        } else {
+            this.renderer.removeStyle(this.elRef.nativeElement, "height");
+        }
+
         this.renderer.setStyle(this.elRef.nativeElement, 'flex-basis', value);
+    }
+
+    public setSizePx(value: number, direction: 'horizontal' | 'vertical') {
+        this.renderer.removeStyle(this.elRef.nativeElement, 'flex-basis');
+        if (direction === 'horizontal') {
+            this.renderer.setStyle(this.elRef.nativeElement, "width", `${value}px`);
+        } else {
+            this.renderer.setStyle(this.elRef.nativeElement, "height", `${value}px`);
+        }
+            
     }
     
     private setStyleTransition(useTransition: boolean): void {

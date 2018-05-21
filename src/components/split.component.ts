@@ -269,10 +269,10 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
     private draggingWithoutMove: boolean = false;
     private currentGutterNum: number = 0;
 
-    public readonly displayedAreas: Array<IArea> = [];
-    private readonly hidedAreas: Array<IArea> = [];
+    public readonly displayedAreas: IArea[] = [];
+    private readonly hidedAreas: IArea[] = [];
     
-    private readonly dragListeners: Array<Function> = [];
+    private readonly dragListeners: Function[] = [];
     private readonly dragStartValues = {
         sizePixelContainer: 0,
         sizePixelA: 0,
@@ -286,25 +286,18 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
                 private cdRef: ChangeDetectorRef,
                 private renderer: Renderer2) {}
 
-    public ngAfterViewInit() {
-        this.isViewInitialized = true;
-    }
-
-    private getNbGutters(): number {
-        return this.displayedAreas.length - 1;
-    }
-
     public addArea(comp: SplitAreaDirective): void {
+
         const newArea: IArea = {
-            comp, 
-            order: 0, 
+            comp,
+            order: 0,
             size: 0,
+            minSizePx: comp.minSizePx
         };
 
-        if(comp.visible === true) {
+        if (comp.visible === true) {
             this.displayedAreas.push(newArea);
-        }
-        else {
+        } else {
             this.hidedAreas.push(newArea);
         }
 
@@ -314,23 +307,25 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
     }
 
     public removeArea(comp: SplitAreaDirective): void {
-        if(this.displayedAreas.some(a => a.comp === comp)) {
-            const area = <IArea> this.displayedAreas.find(a => a.comp === comp)
+        if (this.displayedAreas.some((a) => a.comp === comp)) {
+            const area = this.displayedAreas.find((a) => a.comp === comp) as IArea;
             this.displayedAreas.splice(this.displayedAreas.indexOf(area), 1);
 
             this.build(true, true);
-        }
-        else if(this.hidedAreas.some(a => a.comp === comp)) {
-            const area = <IArea> this.hidedAreas.find(a => a.comp === comp)
+        } else if (this.hidedAreas.some((a) => a.comp === comp)) {
+            const area = this.hidedAreas.find((a) => a.comp === comp) as IArea;
             this.hidedAreas.splice(this.hidedAreas.indexOf(area), 1);
         }
     }
 
     public updateArea(comp: SplitAreaDirective, resetOrders: boolean, resetSizes: boolean): void {
         // Only refresh if area is displayed (No need to check inside 'hidedAreas')
-        const item = this.displayedAreas.find(a => a.comp === comp);
+        const item = this.displayedAreas.find((a) => a.comp === comp);
 
-        if(item) {
+        if (item) {
+            // use minSizePx from the component
+            item.minSizePx = comp.minSizePx;
+
             this.build(resetOrders, resetSizes);
         }
     }
@@ -338,7 +333,7 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
     public showArea(comp: SplitAreaDirective): void {
         const area = this.hidedAreas.find(a => a.comp === comp);
 
-        if(area) {
+        if (area) {
             comp.setStyleVisibleAndDir(comp.visible, this.isDragging, this.direction);
 
             const areas = this.hidedAreas.splice(this.hidedAreas.indexOf(area), 1);
@@ -351,32 +346,39 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
     public hideArea(comp: SplitAreaDirective): void {
         const area = this.displayedAreas.find(a => a.comp === comp);
 
-        if(area) {
+        if (area) {
             comp.setStyleVisibleAndDir(comp.visible, this.isDragging, this.direction);
 
             const areas = this.displayedAreas.splice(this.displayedAreas.indexOf(area), 1);
-            areas.forEach(area => {
-                area.order = 0;
-                area.size = 0;
-            })
+            areas.forEach((currentArea) => {
+                currentArea.order = 0;
+                currentArea.size = 0;
+            });
             this.hidedAreas.push(...areas);
 
             this.build(true, true);
         }
     }
 
+    public ngAfterViewInit() {
+        this.isViewInitialized = true;
+    }
+
+    private getNbGutters(): number {
+        return this.displayedAreas.length - 1;
+    }
+
     private build(resetOrders: boolean, resetSizes: boolean): void {
         this.stopDragging();
 
         // ¤ AREAS ORDER
-        
-        if(resetOrders === true) {    
+        if (resetOrders === true) {
 
             // If user provided 'order' for each area, use it to sort them.
-            if(this.displayedAreas.every(a => a.comp.order !== null)) {
-                this.displayedAreas.sort((a, b) => (<number> a.comp.order) - (<number> b.comp.order));
+            if (this.displayedAreas.every((a) => a.comp.order !== null)) {
+                this.displayedAreas.sort((a, b) => (a.comp.order as number) - (b.comp.order as number));
             }
-    
+
             // Then set real order with multiples of 2, numbers between will be used by gutters.
             this.displayedAreas.forEach((area, i) => {
                 area.order = i * 2;
@@ -386,16 +388,19 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
         }
 
         // ¤ AREAS SIZE PERCENT
-        
-        if(resetSizes === true) {
 
-            const totalUserSize = <number> this.displayedAreas.reduce((total: number, s: IArea) => s.comp.size ? total + s.comp.size : total, 0);
-            
+        if (resetSizes === true) {
+
+            const totalUserSize = this.displayedAreas.reduce(
+                (total: number, s: IArea) => s.comp.size ? total + s.comp.size : total, 0) as number;
+
             // If user provided 'size' for each area and total == 1, use it.
-            if(this.displayedAreas.every(a => a.comp.size !== null) && totalUserSize > .999 && totalUserSize < 1.001 ) {
+            if (this.displayedAreas.every((a) => a.comp.size !== null) 
+                && totalUserSize > .999
+                && totalUserSize < 1.001 ) {
 
-                this.displayedAreas.forEach(area => {
-                    area.size = <number> area.comp.size;
+                this.displayedAreas.forEach((area) => {
+                    area.size = area.comp.size as number;
                 });
             }
             // Else set equal sizes for all areas.
@@ -415,13 +420,7 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
         let percentToDispatch = 0;
         
         // Get container pixel size
-        let containerSizePixel = this.getNbGutters() * this.gutterSize;
-        if(this.direction === 'horizontal') {
-            containerSizePixel = this.width ? this.width : this.elRef.nativeElement['offsetWidth'];
-        }
-        else {
-            containerSizePixel = this.height ? this.height : this.elRef.nativeElement['offsetHeight'];
-        }
+        const containerSizePixel = this.containerSizePx;
 
         this.displayedAreas.forEach(area => {
             if(area.size * containerSizePixel < this.gutterSize) {
@@ -447,16 +446,107 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
             }
         }
 
+        this.checkAndFixMinSizePxAreas();
 
         this.refreshStyleSizes();
         this.cdRef.markForCheck();
     }
 
+    /**
+     * Size of the container in pixels (corresponding to direction: height or width)
+     */
+    private get containerSizePx(): number {
+         // Get container pixel size
+         let result = this.getNbGutters() * this.gutterSize;
+         if (this.direction === 'horizontal') {
+            result = this.width ? this.width : (this.elRef.nativeElement as HTMLElement).offsetWidth;
+         } else {
+            result = this.height ? this.height : (this.elRef.nativeElement as HTMLElement).offsetHeight;
+         }
+
+         return result;
+    }
+
+    /**
+     * Checks and fixes <split-area>-Components that have minSizePx configured
+     */
+    private checkAndFixMinSizePxAreas(): void {
+
+
+        // if we have one or zero displayed area(s)
+        if (this.displayedAreas.length <= 1) {
+            // there is nothing to check and fix
+            return;
+        }
+
+        const containerSizePixel = this.containerSizePx;
+        let percentOfAllAreas = 0;
+
+        this.displayedAreas.forEach((area) => {
+            // add percent-size to percent of all areas
+            percentOfAllAreas += area.size as number;
+        });
+
+        const displayedAreasWithSizeGreaterZero = this.displayedAreas.filter((a) => a.size !== 0);
+
+        displayedAreasWithSizeGreaterZero.forEach((area, index) => {
+            // if the (calculated) area size in pixels is smaller than its configured minSize
+            if (area.size * containerSizePixel <= (area.minSizePx as number)) {
+                const newAreaSize = area.minSizePx as number / containerSizePixel;
+                let diff = newAreaSize - area.size;
+                area.size = newAreaSize;
+
+                displayedAreasWithSizeGreaterZero.forEach((area, i) => {
+                    if (i <= index) {
+                        return;
+                    }
+
+                    if (area.size >= diff) {
+                        IMPLEMENT HERE!
+                    }
+                });
+            }
+        });
+
+        // areas that do not use min px size and have a size greater than 0
+        const areasThatDontUseMinPxSize = this.displayedAreas.filter((a) => !a.useMinPxSize && a.size > 0);
+
+        // how many areas are not using a min px size;
+        const areaCountToShareAvailableSpaceInPcnt = areasThatDontUseMinPxSize.length;
+
+        // every area that doesn't use min px size
+        areasThatDontUseMinPxSize.forEach((area) => {
+            // size of area = total percent / count of all areas that share the available space in percent
+            area.size = percentOfAllAreas / areaCountToShareAvailableSpaceInPcnt;
+        });
+    }
+
+    /**
+     * Returns the Pixels (sum) of all pixel sized areas
+     */
+    private getSumPxSizedAreas(): number {
+        let result: number = 0;
+
+        this.displayedAreas
+        // areas that are displayed in minSizePx
+        .filter((a) => a.useMinPxSize)
+        .forEach((area) => {
+            result += area.minSizePx as number;
+        });
+
+        return result;
+    }
+
     private refreshStyleSizes(): void {
         const sumGutterSize = this.getNbGutters() * this.gutterSize;
+        const sumPxSizedAreas = this.getSumPxSizedAreas();
 
-        this.displayedAreas.forEach(area => {
-            area.comp.setStyleFlexbasis(`calc( ${ area.size * 100 }% - ${ area.size * sumGutterSize }px )`, this.isDragging);
+        this.displayedAreas.forEach((area) => {
+            if (area.useMinPxSize) {
+                area.comp.setSizePx(area.minSizePx as number, this.direction);
+            } else {
+                area.comp.setStyleFlexbasis(`calc( ${ area.size * 100 }% - ${ area.size * (sumGutterSize + sumPxSizedAreas) }px )`, this.isDragging, this.direction);
+            }
         });
     }
 
@@ -560,8 +650,23 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
 
         let newSizePixelA = this.dragStartValues.sizePixelA - offsetPixel;
         let newSizePixelB = this.dragStartValues.sizePixelB + offsetPixel;
-        
-        if(newSizePixelA < this.gutterSize && newSizePixelB < this.gutterSize) {
+
+        // calculate completeSize of A and B
+        const completeSizePixel = newSizePixelA + newSizePixelB;
+
+        // A has minSizePx set
+        if (!!areaA.minSizePx && newSizePixelA <= areaA.minSizePx) {
+           newSizePixelA = areaA.minSizePx;
+           newSizePixelB = completeSizePixel - newSizePixelA;
+        }
+
+        // B has minSizePx set
+        if (!!areaB.minSizePx && newSizePixelB <= areaB.minSizePx) {
+            newSizePixelB = areaB.minSizePx;
+            newSizePixelA = completeSizePixel - newSizePixelB;
+         }
+
+        if (newSizePixelA < this.gutterSize && newSizePixelB < this.gutterSize) {
             // WTF.. get out of here!
             return;
         }
