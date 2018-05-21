@@ -1,1 +1,0 @@
-{"version":3,"file":"IArea.js","sourceRoot":"","sources":["IArea.ts"],"names":[],"mappings":"","sourcesContent":["import { SplitAreaDirective } from \"../components/splitArea.directive\";\r\n\r\nexport interface IArea {\r\n    comp: SplitAreaDirective;\r\n    size: number;\r\n    minSizePx?: number;\r\n    useMinPxSize?: boolean;\r\n    order: number;\r\n}\r\n"]}
