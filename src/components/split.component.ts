@@ -674,12 +674,14 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
     }
 
     private drag(start: IPoint, end: IPoint, areaA: IArea, areaB: IArea): void {
-
+        
         // ¤ AREAS SIZE PIXEL
 
-        const devicePixelRatio = window.devicePixelRatio || 1;
+        
         let offsetPixel = (this.direction === 'horizontal') ? (start.x - end.x) : (start.y - end.y);
-        offsetPixel = offsetPixel / devicePixelRatio;
+        
+        /* const devicePixelRatio = window.devicePixelRatio || 1; //doesn't work
+        offsetPixel = offsetPixel / devicePixelRatio; //doesn't work */
         
         if(this.dir === 'rtl') {
             offsetPixel = -offsetPixel;
@@ -699,7 +701,7 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
         else if(newSizePixelB < this.gutterSize) {
             newSizePixelA += newSizePixelB;
             newSizePixelB = 0;
-        }
+        }    
 
         // ¤ AREAS SIZE PERCENT
 

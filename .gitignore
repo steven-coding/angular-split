@@ -3,6 +3,15 @@ $ cat .gitignore
 /dist
 /documentation
 /coverage
+/.vscode
+src/**/*.js
+tests/**/*.js
+test-app/**/*.js
 
 *.log
 *.tgz
+*.map
+
+ng-split-areas.js
+public_api.js
+test-app.js
