@@ -9,6 +9,341 @@
  * @suppress {checkTypes} checked by tsc
  */
 /**
+ * Calculation logic for area sizes
+ */
+var AreaSizeCalculation = (function () {
+    function AreaSizeCalculation() {
+    }
+    /**
+     * Modifies sizes of areas in the list by totalSize
+     *
+     * @param {?} areas list of areas to be modified
+     * @param {?} sourceAreaIndex index of area that triggered modification (will not be modified [a second time])
+     * @param {?} totalSize size to be added / subtracted to / from areas within the list
+     * @param {?} containerSizePixel size of the container in pixel
+     * @param {?} gutterSizePxPerVisibleComponent size of the gutter in pixel per visible component
+     * @param {?} direction direction of modification starting from sourceAreaIndex
+     * @return {?} size left, that couldnt be added / subtracted to / from the areas within the list
+     */
+    AreaSizeCalculation.modifyAreaSizes = /**
+     * Modifies sizes of areas in the list by totalSize
+     *
+     * @param {?} areas list of areas to be modified
+     * @param {?} sourceAreaIndex index of area that triggered modification (will not be modified [a second time])
+     * @param {?} totalSize size to be added / subtracted to / from areas within the list
+     * @param {?} containerSizePixel size of the container in pixel
+     * @param {?} gutterSizePxPerVisibleComponent size of the gutter in pixel per visible component
+     * @param {?} direction direction of modification starting from sourceAreaIndex
+     * @return {?} size left, that couldnt be added / subtracted to / from the areas within the list
+     */
+    function (areas, sourceAreaIndex, totalSize, containerSizePixel, gutterSizePxPerVisibleComponent, direction) {
+        var /** @type {?} */ result = totalSize;
+        // if there is nothing to modify (-> totalSize is zero)
+        if (result === 0) {
+            // there's nothing to do
+            return result;
+        }
+        // if the area-list is empty
+        if (!areas || areas.length === 0) {
+            // there's nothing to do
+            return result;
+        }
+        // if there is only 1 area in the area list
+        if (areas.length <= 1) {
+            // there's nothing to do, because the list contains the source area only
+            return result;
+        }
+        // modifying direction = to the right
+        if (direction === 'right') {
+            // sourceArea is rightmost area
+            if (sourceAreaIndex + 1 === areas.length) {
+                // there's nothing to do
+                return result;
+            }
+            // iterate the area-list to the right (starting with the component next to sourceAreaIndex)
+            for (var /** @type {?} */ i = sourceAreaIndex + 1; i < areas.length; i++) {
+                // area at current index
+                var /** @type {?} */ currentArea = areas[i];
+                // left space to be subtracted
+                result = AreaSizeCalculation.modifyAreaSize(currentArea, result, containerSizePixel, gutterSizePxPerVisibleComponent);
+                // if there is no space left to modify
+                if (result === 0) {
+                    // stop iterating
+                    break;
+                }
+            }
+        }
+        else if (direction === 'left') {
+            // modifying direction = to the left
+            // sourceArea is leftmost area
+            if (sourceAreaIndex === 0) {
+                // there's nothing to do
+                return result;
+            }
+            // iterate the area-list to the left (starting with the component next to sourceAreaIndex)
+            for (var /** @type {?} */ i = sourceAreaIndex - 1; i >= 0; i--) {
+                // area at current index
+                var /** @type {?} */ currentArea = areas[i];
+                // left space to be subtracted
+                result = AreaSizeCalculation.modifyAreaSize(currentArea, result, containerSizePixel, gutterSizePxPerVisibleComponent);
+                // if there is no space left to modify
+                if (result === 0) {
+                    // stop iterating
+                    break;
+                }
+            }
+        }
+        return result;
+    };
+    /**
+     * Modifies size of the area by given size
+     *
+     * @param {?} area Area to be modified
+     * @param {?} sizeToBeModified Size to be added / subtracted to / from the area
+     * @param {?} containerSize Size of the container
+     * @param {?} gutterSizePxPerVisibleComponent gutter size in px per visible component
+     *
+     * @return {?} left size that couldn't be added / subtracted to / from
+     *  the area (through min / max restrictions)
+     */
+    AreaSizeCalculation.modifyAreaSize = /**
+     * Modifies size of the area by given size
+     *
+     * @param {?} area Area to be modified
+     * @param {?} sizeToBeModified Size to be added / subtracted to / from the area
+     * @param {?} containerSize Size of the container
+     * @param {?} gutterSizePxPerVisibleComponent gutter size in px per visible component
+     *
+     * @return {?} left size that couldn't be added / subtracted to / from
+     *  the area (through min / max restrictions)
+     */
+    function (area, sizeToBeModified, containerSize, gutterSizePxPerVisibleComponent) {
+        // size left to be modified
+        var /** @type {?} */ result = sizeToBeModified;
+        // is current action a subtraction
+        var /** @type {?} */ isSubtract = sizeToBeModified < 0;
+        // there's size to be taken away (subtraction
+        if (isSubtract) {
+            // adding size taken away from the area
+            result += this.subtractSizeFromArea(area, Math.abs(sizeToBeModified), containerSize, gutterSizePxPerVisibleComponent);
+        }
+        return result;
+    };
+    /**
+     * Subtracts size of the area by given size
+     *
+     * @param {?} area Area to be subtracted it's size
+     * @param {?} sizeToBeSubtracted Size to be subtracted from the area
+     * @param {?} containerSize Size of the container
+     * @param {?} gutterSizePxPerVisibleComponent size of the gutter in px per visible component
+     * @return {?} subtracted size that was subtracted
+     */
+    AreaSizeCalculation.subtractSizeFromArea = /**
+     * Subtracts size of the area by given size
+     *
+     * @param {?} area Area to be subtracted it's size
+     * @param {?} sizeToBeSubtracted Size to be subtracted from the area
+     * @param {?} containerSize Size of the container
+     * @param {?} gutterSizePxPerVisibleComponent size of the gutter in px per visible component
+     * @return {?} subtracted size that was subtracted
+     */
+    function (area, sizeToBeSubtracted, containerSize, gutterSizePxPerVisibleComponent) {
+        // size that was subtracted
+        var /** @type {?} */ result = 0;
+        // if the areas size is already 0
+        if (area.size === 0) {
+            // there's nothing to do
+            return result;
+        }
+        // maximum size to be taken away from the area
+        var /** @type {?} */ maxSizeToBeTakenAway = area.size;
+        // area has a minimum pixel restriction
+        if (area.minSizePx) {
+            // minimum size of area (in pcnt of container size)
+            var /** @type {?} */ minSizeInPcntOfCurrentContainer = Math.ceil(area.minSizePx + gutterSizePxPerVisibleComponent) / containerSize;
+            // maximum size to be taken away from area = current-size - min-size
+            maxSizeToBeTakenAway = area.size - minSizeInPcntOfCurrentContainer;
+        }
+        // if there is no size available to be taken away
+        if (maxSizeToBeTakenAway <= 0) {
+            // there's nothing to do
+            return result;
+        }
+        // size to be actually taken away from the area
+        var /** @type {?} */ sizeToBeTakenAway = sizeToBeSubtracted;
+        // if the size to be taken away is > than the max size that can be taken away
+        if (sizeToBeTakenAway > maxSizeToBeTakenAway) {
+            // size to be taken away = max
+            sizeToBeTakenAway = maxSizeToBeTakenAway;
+        }
+        // subtract size from current area's size
+        area.size -= sizeToBeTakenAway;
+        // set the result to the size taken away;
+        result = sizeToBeTakenAway;
+        // return what was actually taken away from the area
+        return result;
+    };
+    /**
+     * Calculates area sizes according to given IAreaSizeCalculationOptions
+     * @param {?} opts
+     * @return {?}
+     */
+    AreaSizeCalculation.prototype.calculate = /**
+     * Calculates area sizes according to given IAreaSizeCalculationOptions
+     * @param {?} opts
+     * @return {?}
+     */
+    function (opts) {
+        // if calculate was triggered by a drag-and-drop action
+        if (opts.calculationSource
+            && (/** @type {?} */ (opts.calculationSource)).isDragAndDrop) {
+            // handle dragging
+            this.handleDragAndDrop(opts);
+        }
+        else if (opts.calculationSource
+            && (/** @type {?} */ (opts.calculationSource)).isWindowResize) {
+            // handle window-resize
+            this.handleWindowResize(opts);
+        }
+        else {
+            // handle normal layout calculations
+            this.handleNormalLayout(opts);
+        }
+    };
+    /**
+     * Calculates area sizes when gutters are dragged
+     * (according to given AreaDragAndDrop inside IAreaSizeCalculationOptions)
+     */
+    /**
+     * Calculates area sizes when gutters are dragged
+     * (according to given AreaDragAndDrop inside IAreaSizeCalculationOptions)
+     * @param {?} opts
+     * @return {?}
+     */
+    AreaSizeCalculation.prototype.handleDragAndDrop = /**
+     * Calculates area sizes when gutters are dragged
+     * (according to given AreaDragAndDrop inside IAreaSizeCalculationOptions)
+     * @param {?} opts
+     * @return {?}
+     */
+    function (opts) {
+        // area-drag-and-drop object inside calculationSource
+        var /** @type {?} */ areaDragAndDrop = /** @type {?} */ (opts.calculationSource);
+        // put dragged areas from drag-and-drop into a 2 element list
+        var /** @type {?} */ draggedAreas = [areaDragAndDrop.areaA, areaDragAndDrop.areaB];
+        // calculate complete size in px of both dragged areas
+        var /** @type {?} */ draggedAreasSizePx = (areaDragAndDrop.areaA.size + areaDragAndDrop.areaB.size)
+            * (opts.containerSizePx ? opts.containerSizePx : 0);
+        // check & fix min sizes of dragged areas
+        this.checkAndFixMinSizePxAreas({
+            // use complete size in px of both dragged areas as containerSizePx
+            containerSizePx: draggedAreasSizePx,
+            // use dragged areas as list of displayed areas
+            displayedAreas: draggedAreas,
+            // copy gutter size of original options object, because it's the same for dragging areas
+            gutterSizePx: opts.gutterSizePx
+        });
+    };
+    /**
+     * Calculates area sizes when the window:resize-event was triggered
+     */
+    /**
+     * Calculates area sizes when the window:resize-event was triggered
+     * @param {?} opts
+     * @return {?}
+     */
+    AreaSizeCalculation.prototype.handleWindowResize = /**
+     * Calculates area sizes when the window:resize-event was triggered
+     * @param {?} opts
+     * @return {?}
+     */
+    function (opts) {
+        return this.checkAndFixMinSizePxAreas(opts);
+    };
+    /**
+     * Calculates area sizes for normal layouting (first display, area-list changes, ...)
+     */
+    /**
+     * Calculates area sizes for normal layouting (first display, area-list changes, ...)
+     * @param {?} opts
+     * @return {?}
+     */
+    AreaSizeCalculation.prototype.handleNormalLayout = /**
+     * Calculates area sizes for normal layouting (first display, area-list changes, ...)
+     * @param {?} opts
+     * @return {?}
+     */
+    function (opts) {
+        return this.checkAndFixMinSizePxAreas(opts);
+    };
+    /**
+     * Checks and fixes <split-area>-Components that have minSizePx configured
+     *
+     * @throws E-00001 - area sizes could not be calculated fixing minSizePx
+     * @param {?} opts
+     * @return {?}
+     */
+    AreaSizeCalculation.prototype.checkAndFixMinSizePxAreas = /**
+     * Checks and fixes <split-area>-Components that have minSizePx configured
+     *
+     * @throws E-00001 - area sizes could not be calculated fixing minSizePx
+     * @param {?} opts
+     * @return {?}
+     */
+    function (opts) {
+        // if we have one or zero displayed area(s)
+        if (opts.displayedAreas.length <= 1) {
+            // there is nothing to check and fix
+            return;
+        }
+        // size of the container in pixel (= available space in px)
+        var /** @type {?} */ containerSizePixel = opts.containerSizePx ? opts.containerSizePx : 0;
+        // sum percent of all areas (100% or less?)
+        opts.displayedAreas.forEach(function (area) {
+            // sum percent-size of each area
+            
+        });
+        // areas with a size > 0
+        var /** @type {?} */ displayedAreasWithSizeGreaterZero = opts.displayedAreas.filter(function (a) { return a.size !== 0; });
+        // total size of all gutters in px
+        var /** @type {?} */ totalGutterSizePx = (opts.displayedAreas.length - 1) * (opts.gutterSizePx ? opts.gutterSizePx : 0);
+        // size of the gutter in px per component
+        var /** @type {?} */ gutterSizePxPerVisibleComponent = displayedAreasWithSizeGreaterZero.length > 1
+            ? totalGutterSizePx / displayedAreasWithSizeGreaterZero.length
+            : totalGutterSizePx;
+        // iterate all displayed areas (with size > 0)
+        displayedAreasWithSizeGreaterZero.forEach(function (area, index) {
+            // if the (calculated) area size in pixels is smaller than its configured minSize
+            if (area.size * containerSizePixel <
+                Math.ceil(/** @type {?} */ (area.minSizePx) + gutterSizePxPerVisibleComponent)) {
+                // new size of the current area (-> min size in percent) =
+                //      it's configured min size in pixels / container size in pixels
+                var /** @type {?} */ newAreaSize = Math.ceil(/** @type {?} */ (area.minSizePx) + gutterSizePxPerVisibleComponent) / containerSizePixel;
+                // space that needs to be taken away from other areas
+                var /** @type {?} */ diff = area.size - newAreaSize;
+                // current area size = size respecting the minimum pixel size
+                area.size = newAreaSize;
+                var /** @type {?} */ diffAfterCheckingRightSideComponents = AreaSizeCalculation.modifyAreaSizes(displayedAreasWithSizeGreaterZero, index, diff, containerSizePixel, gutterSizePxPerVisibleComponent, 'right');
+                // if there is still some space to be modified left after checking right side components
+                if (diffAfterCheckingRightSideComponents !== 0) {
+                    var /** @type {?} */ diffAfterCheckingLeftSideComponents = AreaSizeCalculation.modifyAreaSizes(displayedAreasWithSizeGreaterZero, index, diffAfterCheckingRightSideComponents, containerSizePixel, gutterSizePxPerVisibleComponent, 'left');
+                    // if there is still space left after checking all components
+                    if (diffAfterCheckingLeftSideComponents !== 0) {
+                        // throw an error
+                        throw new Error("E-00001");
+                    }
+                }
+            }
+        });
+    };
+    return AreaSizeCalculation;
+}());
+
+/**
+ * @fileoverview added by tsickle
+ * @suppress {checkTypes} checked by tsc
+ */
+/**
  * angular-split
  *
  * Areas size are set in percentage of the split container.
@@ -61,6 +396,7 @@ var SplitComponent = (function () {
         this.gutterClick = new core.EventEmitter(false);
         this.transitionEndInternal = new Subject.Subject();
         this.transitionEnd = (/** @type {?} */ (this.transitionEndInternal.asObservable())).debounceTime(20);
+        this.defaultAreaSizeCalculation = new AreaSizeCalculation();
         this.isViewInitialized = false;
         this.isDragging = false;
         this.draggingWithoutMove = false;
@@ -319,24 +655,33 @@ var SplitComponent = (function () {
         enumerable: true,
         configurable: true
     });
-    /**
-     * @return {?}
-     */
-    SplitComponent.prototype.ngAfterViewInit = /**
-     * @return {?}
-     */
-    function () {
-        this.isViewInitialized = true;
-    };
-    /**
-     * @return {?}
-     */
-    SplitComponent.prototype.getNbGutters = /**
-     * @return {?}
-     */
-    function () {
-        return this.displayedAreas.length - 1;
-    };
+    Object.defineProperty(SplitComponent.prototype, "areaSizeCalculation", {
+        get: /**
+         * @return {?}
+         */
+        function () {
+            return this._areaSizeCalculation;
+        },
+        set: /**
+         * @param {?} v
+         * @return {?}
+         */
+        function (v) {
+            this._areaSizeCalculation = v;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(SplitComponent.prototype, "areaSizeCalculationToBeUsed", {
+        get: /**
+         * @return {?}
+         */
+        function () {
+            return this.areaSizeCalculation ? this.areaSizeCalculation : this.defaultAreaSizeCalculation;
+        },
+        enumerable: true,
+        configurable: true
+    });
     /**
      * @param {?} comp
      * @return {?}
@@ -348,8 +693,9 @@ var SplitComponent = (function () {
     function (comp) {
         var /** @type {?} */ newArea = {
             comp: comp,
+            minSizePx: comp.minSizePx,
             order: 0,
-            size: 0,
+            size: 0
         };
         if (comp.visible === true) {
             this.displayedAreas.push(newArea);
@@ -395,6 +741,8 @@ var SplitComponent = (function () {
         // Only refresh if area is displayed (No need to check inside 'hidedAreas')
         var /** @type {?} */ item = this.displayedAreas.find(function (a) { return a.comp === comp; });
         if (item) {
+            // use minSizePx from the component
+            item.minSizePx = comp.minSizePx;
             this.build(resetOrders, resetSizes);
         }
     };
@@ -429,14 +777,100 @@ var SplitComponent = (function () {
         if (area) {
             comp.setStyleVisibleAndDir(comp.visible, this.isDragging, this.direction);
             var /** @type {?} */ areas = this.displayedAreas.splice(this.displayedAreas.indexOf(area), 1);
-            areas.forEach(function (area) {
-                area.order = 0;
-                area.size = 0;
+            areas.forEach(function (currentArea) {
+                currentArea.order = 0;
+                currentArea.size = 0;
             });
             (_a = this.hidedAreas).push.apply(_a, areas);
             this.build(true, true);
         }
         var _a;
+    };
+    Object.defineProperty(SplitComponent.prototype, "containerMinWidth", {
+        get: /**
+         * Min-Width of the container
+         * @return {?}
+         */
+        function () {
+            // if split direction is NOT vertical
+            if (this.direction !== "horizontal") {
+                // min-width is 0 (unset)
+                return 0;
+            }
+            // return the sum of all area minSizes + gutter sizes
+            return this.getMinSizeOfAllDisplayedComponentsPlusGutterSize();
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(SplitComponent.prototype, "containerMinHeight", {
+        get: /**
+         * Min-Height of the container
+         * @return {?}
+         */
+        function () {
+            // if split direction is NOT vertical
+            if (this.direction !== "vertical") {
+                // min-height is 0 (unset)
+                return 0;
+            }
+            // return the sum of all area minSizes + gutter sizes
+            return this.getMinSizeOfAllDisplayedComponentsPlusGutterSize();
+        },
+        enumerable: true,
+        configurable: true
+    });
+    /**
+     * @return {?}
+     */
+    SplitComponent.prototype.ngAfterViewInit = /**
+     * @return {?}
+     */
+    function () {
+        this.isViewInitialized = true;
+    };
+    /**
+     * Sum of all area minSizes + gutter sizes
+     * @return {?}
+     */
+    SplitComponent.prototype.getMinSizeOfAllDisplayedComponentsPlusGutterSize = /**
+     * Sum of all area minSizes + gutter sizes
+     * @return {?}
+     */
+    function () {
+        if (!this.displayedAreas || this.displayedAreas.length === 0) {
+            return 0;
+        }
+        return this.getMinSizeOfAllDisplayedComponents() + (this.gutterSize * (this.displayedAreas.length - 1));
+    };
+    /**
+     * Sum of all area minSizes
+     * @return {?}
+     */
+    SplitComponent.prototype.getMinSizeOfAllDisplayedComponents = /**
+     * Sum of all area minSizes
+     * @return {?}
+     */
+    function () {
+        if (!this.displayedAreas || this.displayedAreas.length === 0) {
+            return 0;
+        }
+        var /** @type {?} */ result = 0;
+        this.displayedAreas.forEach(function (area) {
+            if (area.minSizePx) {
+                result += area.minSizePx;
+            }
+        });
+        return result;
+    };
+    /**
+     * @return {?}
+     */
+    SplitComponent.prototype.getNbGutters = /**
+     * @return {?}
+     */
+    function () {
+        return this.displayedAreas.length - 1;
     };
     /**
      * @param {?} resetOrders
@@ -467,7 +901,9 @@ var SplitComponent = (function () {
         if (resetSizes === true) {
             var /** @type {?} */ totalUserSize = /** @type {?} */ (this.displayedAreas.reduce(function (total, s) { return s.comp.size ? total + s.comp.size : total; }, 0));
             // If user provided 'size' for each area and total == 1, use it.
-            if (this.displayedAreas.every(function (a) { return a.comp.size !== null; }) && totalUserSize > .999 && totalUserSize < 1.001) {
+            if (this.displayedAreas.every(function (a) { return a.comp.size !== null; })
+                && totalUserSize > .999
+                && totalUserSize < 1.001) {
                 this.displayedAreas.forEach(function (area) {
                     area.size = /** @type {?} */ (area.comp.size);
                 });
@@ -484,13 +920,7 @@ var SplitComponent = (function () {
         // set them to zero and dispatch size to others.
         var /** @type {?} */ percentToDispatch = 0;
         // Get container pixel size
-        var /** @type {?} */ containerSizePixel = this.getNbGutters() * this.gutterSize;
-        if (this.direction === 'horizontal') {
-            containerSizePixel = this.width ? this.width : this.elRef.nativeElement['offsetWidth'];
-        }
-        else {
-            containerSizePixel = this.height ? this.height : this.elRef.nativeElement['offsetHeight'];
-        }
+        var /** @type {?} */ containerSizePixel = this.containerSizePx;
         this.displayedAreas.forEach(function (area) {
             if (area.size * containerSizePixel < _this.gutterSize) {
                 percentToDispatch += area.size;
@@ -509,9 +939,48 @@ var SplitComponent = (function () {
                 this.displayedAreas[this.displayedAreas.length - 1].size = 1;
             }
         }
+        // do the extra calculation
+        this.areaSizeCalculationToBeUsed.calculate(this.createAreaSizeCalculationOptions());
         this.refreshStyleSizes();
         this.cdRef.markForCheck();
     };
+    /**
+     * Creates an AreaSizeCalculation-Object of currently set instance parameters
+     * @param {?=} calculationSource
+     * @return {?}
+     */
+    SplitComponent.prototype.createAreaSizeCalculationOptions = /**
+     * Creates an AreaSizeCalculation-Object of currently set instance parameters
+     * @param {?=} calculationSource
+     * @return {?}
+     */
+    function (calculationSource) {
+        return {
+            calculationSource: calculationSource,
+            containerSizePx: this.containerSizePx,
+            displayedAreas: this.displayedAreas,
+            gutterSizePx: this.gutterSize
+        };
+    };
+    Object.defineProperty(SplitComponent.prototype, "containerSizePx", {
+        get: /**
+         * Size of the container in pixels (corresponding to direction: height or width)
+         * @return {?}
+         */
+        function () {
+            // Get container pixel size
+            var /** @type {?} */ result = this.getNbGutters() * this.gutterSize;
+            if (this.direction === 'horizontal') {
+                result = this.width ? this.width : (/** @type {?} */ (this.elRef.nativeElement)).offsetWidth;
+            }
+            else {
+                result = this.height ? this.height : (/** @type {?} */ (this.elRef.nativeElement)).offsetHeight;
+            }
+            return result;
+        },
+        enumerable: true,
+        configurable: true
+    });
     /**
      * @return {?}
      */
@@ -684,6 +1153,11 @@ var SplitComponent = (function () {
                 areaB.size = (this.dragStartValues.sizePercentA + this.dragStartValues.sizePercentB) - areaA.size;
             }
         }
+        this.areaSizeCalculationToBeUsed.calculate(this.createAreaSizeCalculationOptions({
+            areaA: areaA,
+            areaB: areaB,
+            isDragAndDrop: true
+        }));
         this.refreshStyleSizes();
         this.notify('progress');
     };
@@ -747,12 +1221,25 @@ var SplitComponent = (function () {
     function () {
         this.stopDragging();
     };
+    /**
+     * @return {?}
+     */
+    SplitComponent.prototype.handleWindowResize = /**
+     * @return {?}
+     */
+    function () {
+        this.areaSizeCalculationToBeUsed.calculate(this.createAreaSizeCalculationOptions({
+            isWindowResize: true
+        }));
+        this.refreshStyleSizes();
+        this.cdRef.markForCheck();
+    };
     SplitComponent.decorators = [
         { type: core.Component, args: [{
                     selector: 'split',
                     changeDetection: core.ChangeDetectionStrategy.OnPush,
                     styles: ["\n        :host {\n            display: flex;\n            flex-wrap: nowrap;\n            justify-content: flex-start;\n            align-items: stretch;\n            overflow: hidden;\n            /* \n                Important to keep following rules even if overrided later by 'HostBinding' \n                because if [width] & [height] not provided, when build() is executed,\n                'HostBinding' hasn't been applied yet so code:\n                this.elRef.nativeElement[\"offsetHeight\"] gives wrong value!  \n             */\n            width: 100%;\n            height: 100%;   \n        }\n\n        split-gutter {\n            flex-grow: 0;\n            flex-shrink: 0;\n            background-position: center center;\n            background-repeat: no-repeat;\n        }\n    "],
-                    template: "\n        <ng-content></ng-content>\n        <ng-template ngFor let-area [ngForOf]=\"displayedAreas\" let-index=\"index\" let-last=\"last\">\n            <split-gutter *ngIf=\"last === false\" \n                          [order]=\"index*2+1\"\n                          [direction]=\"direction\"\n                          [useTransition]=\"useTransition\"\n                          [size]=\"gutterSize\"\n                          [color]=\"gutterColor\"\n                          [imageH]=\"gutterImageH\"\n                          [imageV]=\"gutterImageV\"\n                          [disabled]=\"disabled\"\n                          (mousedown)=\"startDragging($event, index*2+1, index+1)\"\n                          (touchstart)=\"startDragging($event, index*2+1, index+1)\"></split-gutter>\n        </ng-template>",
+                    template: "\n        <ng-content></ng-content>\n        <ng-template ngFor let-area [ngForOf]=\"displayedAreas\" let-index=\"index\" let-last=\"last\">\n            <split-gutter *ngIf=\"last === false\" \n                          [order]=\"index*2+1\"\n                          [direction]=\"direction\"\n                          [useTransition]=\"useTransition\"\n                          [size]=\"gutterSize\"\n                          [color]=\"gutterColor\"\n                          [imageH]=\"gutterImageH\"\n                          [imageV]=\"gutterImageV\"\n                          [disabled]=\"disabled\"\n                          (mousedown)=\"startDragging($event, index*2+1, index+1)\"\n                          (touchstart)=\"startDragging($event, index*2+1, index+1)\"></split-gutter>\n        </ng-template>"
                 },] },
     ];
     /** @nocollapse */
@@ -783,6 +1270,10 @@ var SplitComponent = (function () {
         "cssHeight": [{ type: core.HostBinding, args: ['style.height',] },],
         "cssMinwidth": [{ type: core.HostBinding, args: ['style.min-width',] },],
         "cssMinheight": [{ type: core.HostBinding, args: ['style.min-height',] },],
+        "areaSizeCalculation": [{ type: core.Input },],
+        "containerMinWidth": [{ type: core.HostBinding, args: ["style.min-width.px",] },],
+        "containerMinHeight": [{ type: core.HostBinding, args: ["style.min-height.px",] },],
+        "handleWindowResize": [{ type: core.HostListener, args: ['window:resize',] },],
     };
     return SplitComponent;
 }());
@@ -855,6 +1346,26 @@ var SplitAreaDirective = (function () {
         function (v) {
             v = Number(v);
             this._minSize = (!isNaN(v) && v > 0 && v < 100) ? v / 100 : 0;
+            this.split.updateArea(this, false, true);
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(SplitAreaDirective.prototype, "minSizePx", {
+        get: /**
+         * @return {?}
+         */
+        function () {
+            return this._minSizePx;
+        },
+        set: /**
+         * minimum size (in pixels) of the splitArea
+         * @param {?} v
+         * @return {?}
+         */
+        function (v) {
+            console.log("set minWidthPx", v);
+            this._minSizePx = v;
             this.split.updateArea(this, false, true);
         },
         enumerable: true,
@@ -977,6 +1488,25 @@ var SplitAreaDirective = (function () {
         this.renderer.setStyle(this.elRef.nativeElement, 'flex-basis', value);
     };
     /**
+     * @param {?} value
+     * @param {?} direction
+     * @return {?}
+     */
+    SplitAreaDirective.prototype.setSizePx = /**
+     * @param {?} value
+     * @param {?} direction
+     * @return {?}
+     */
+    function (value, direction) {
+        this.renderer.removeStyle(this.elRef.nativeElement, 'flex-basis');
+        if (direction === 'horizontal') {
+            this.renderer.setStyle(this.elRef.nativeElement, "width", value + "px");
+        }
+        else {
+            this.renderer.setStyle(this.elRef.nativeElement, "height", value + "px");
+        }
+    };
+    /**
      * @param {?} useTransition
      * @return {?}
      */
@@ -1062,6 +1592,7 @@ var SplitAreaDirective = (function () {
         "order": [{ type: core.Input },],
         "size": [{ type: core.Input },],
         "minSize": [{ type: core.Input },],
+        "minSizePx": [{ type: core.Input },],
         "visible": [{ type: core.Input },],
     };
     return SplitAreaDirective;

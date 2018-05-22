@@ -16,13 +16,13 @@ export class AreaSizeCalculation implements IAreaSizeCalculation {
     /**
      * Modifies sizes of areas in the list by totalSize
      *
-     * @param {IArea[]} areas list of areas to be modified
-     * @param {number} sourceAreaIndex index of area that triggered modification (will not be modified [a second time])
-     * @param {number} totalSize size to be added / subtracted to / from areas within the list
-     * @param {number} containerSizePixel size of the container in pixel
-     * @param {number} gutterSizePxPerVisibleComponent size of the gutter in pixel per visible component
-     * @param {"left" | "right"} direction direction of modification starting from sourceAreaIndex
-     * @returns {number} size left, that couldnt be added / subtracted to / from the areas within the list
+     * @param areas list of areas to be modified
+     * @param sourceAreaIndex index of area that triggered modification (will not be modified [a second time])
+     * @param totalSize size to be added / subtracted to / from areas within the list
+     * @param containerSizePixel size of the container in pixel
+     * @param gutterSizePxPerVisibleComponent size of the gutter in pixel per visible component
+     * @param direction direction of modification starting from sourceAreaIndex
+     * @returns size left, that couldnt be added / subtracted to / from the areas within the list
      */
     private static modifyAreaSizes(
         areas: IArea[],
@@ -125,12 +125,12 @@ export class AreaSizeCalculation implements IAreaSizeCalculation {
     /**
      * Modifies size of the area by given size
      *
-     * @param {IArea} area Area to be modified
-     * @param {number} sizeToBeModified Size to be added / subtracted to / from the area
-     * @param {number} containerSize Size of the container
-     * @param {number} gutterSizePxPerVisibleComponent gutter size in px per visible component
+     * @param area Area to be modified
+     * @param sizeToBeModified Size to be added / subtracted to / from the area
+     * @param containerSize Size of the container
+     * @param gutterSizePxPerVisibleComponent gutter size in px per visible component
      *
-     * @returns {number} left size that couldn't be added / subtracted to / from
+     * @returns left size that couldn't be added / subtracted to / from
      *  the area (through min / max restrictions)
      */
     private static modifyAreaSize(
@@ -164,11 +164,11 @@ export class AreaSizeCalculation implements IAreaSizeCalculation {
     /**
      * Subtracts size of the area by given size
      *
-     * @param {IArea} area Area to be subtracted it's size
-     * @param {number} sizeToBeSubtracted Size to be subtracted from the area
-     * @param {number} containerSize Size of the container
-     * @param {number} gutterSizePxPerVisibleComponent size of the gutter in px per visible component
-     * @returns {number} subtracted size that was subtracted
+     * @param area Area to be subtracted it's size
+     * @param sizeToBeSubtracted Size to be subtracted from the area
+     * @param containerSize Size of the container
+     * @param gutterSizePxPerVisibleComponent size of the gutter in px per visible component
+     * @returns subtracted size that was subtracted
      */
     private static subtractSizeFromArea(
         area: IArea,

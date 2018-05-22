@@ -389,7 +389,6 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
 
     /**
      * Min-Width of the container
-     * @returns {number}
      */
     @HostBinding("style.min-width.px")
     public get containerMinWidth(): number {
@@ -406,7 +405,6 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
 
     /**
      * Min-Height of the container
-     * @returns {number}
      */
     @HostBinding("style.min-height.px")
     public get containerMinHeight(): number {
@@ -427,8 +425,6 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
 
     /**
      * Sum of all area minSizes + gutter sizes
-     *
-     * @returns {number}
      */
     private getMinSizeOfAllDisplayedComponentsPlusGutterSize(): number {
         if (!this.displayedAreas || this.displayedAreas.length === 0) {
@@ -439,8 +435,6 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
 
     /**
      * Sum of all area minSizes
-     *
-     * @returns {number}
      */
     private getMinSizeOfAllDisplayedComponents(): number {
         if (!this.displayedAreas || this.displayedAreas.length === 0) {
