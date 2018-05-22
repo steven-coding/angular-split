@@ -1,5 +1,7 @@
-import { Component, ChangeDetectorRef, Input, Output, HostBinding, ChangeDetectionStrategy, 
-    EventEmitter, Renderer2, OnDestroy, ElementRef, AfterViewInit, NgZone } from '@angular/core';
+import {
+    Component, ChangeDetectorRef, Input, Output, HostBinding, ChangeDetectionStrategy,
+    EventEmitter, Renderer2, OnDestroy, ElementRef, AfterViewInit, NgZone, HostListener
+} from '@angular/core';
 import { Subject } from 'rxjs/Subject';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/operator/debounceTime';
@@ -7,6 +9,11 @@ import 'rxjs/add/operator/debounceTime';
 import { IArea } from './../interface/IArea';
 import { IPoint } from './../interface/IPoint';
 import { SplitAreaDirective } from './splitArea.directive';
+import {IAreaSizeCalculation} from "../interface/calculation/IAreaSizeCalculation";
+import {AreaSizeCalculation} from "./calculation/area-size-calculation";
+import {IAreaSizeCalculationOptions} from "../interface/calculation/IAreaSizeCalculationOptions";
+import {IAreaDragAndDropCalculationSource} from "../interface/calculation/calculation-sources/IAreaDragAndDropCalculationSource";
+import {IWindowResizeCalculationSource} from "../interface/calculation/calculation-sources/IWindowResizeCalculationSource";
 
 /**
  * angular-split
@@ -81,9 +88,11 @@ import { SplitAreaDirective } from './splitArea.directive';
                           [disabled]="disabled"
                           (mousedown)="startDragging($event, index*2+1, index+1)"
                           (touchstart)="startDragging($event, index*2+1, index+1)"></split-gutter>
-        </ng-template>`,
+        </ng-template>`
 })
 export class SplitComponent implements AfterViewInit, OnDestroy {
+
+
 
     private _direction: 'horizontal' | 'vertical' = 'horizontal';
 
@@ -264,6 +273,22 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
         return (this.direction === 'vertical') ? `${ this.getNbGutters() * this.gutterSize }px` : null;
     }
 
+    private defaultAreaSizeCalculation: IAreaSizeCalculation = new AreaSizeCalculation();
+
+    private _areaSizeCalculation: IAreaSizeCalculation;
+
+    @Input() public set areaSizeCalculation(v: IAreaSizeCalculation) {
+        this._areaSizeCalculation = v;
+    }
+
+    public get areaSizeCalculation(): IAreaSizeCalculation {
+        return this._areaSizeCalculation;
+    }
+
+    public get areaSizeCalculationToBeUsed() {
+        return this.areaSizeCalculation ? this.areaSizeCalculation : this.defaultAreaSizeCalculation;
+    }
+
     public isViewInitialized: boolean = false;
     private isDragging: boolean = false;
     private draggingWithoutMove: boolean = false;
@@ -286,13 +311,15 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
                 private cdRef: ChangeDetectorRef,
                 private renderer: Renderer2) {}
 
+
+
     public addArea(comp: SplitAreaDirective): void {
 
         const newArea: IArea = {
             comp,
+            minSizePx: comp.minSizePx,
             order: 0,
-            size: 0,
-            minSizePx: comp.minSizePx
+            size: 0
         };
 
         if (comp.visible === true) {
@@ -360,8 +387,76 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
         }
     }
 
+    /**
+     * Min-Width of the container
+     * @returns {number}
+     */
+    @HostBinding("style.min-width.px")
+    public get containerMinWidth(): number {
+        // if split direction is NOT vertical
+        if (this.direction !== "horizontal") {
+
+            // min-width is 0 (unset)
+            return 0;
+        }
+
+        // return the sum of all area minSizes + gutter sizes
+        return this.getMinSizeOfAllDisplayedComponentsPlusGutterSize();
+    }
+
+    /**
+     * Min-Height of the container
+     * @returns {number}
+     */
+    @HostBinding("style.min-height.px")
+    public get containerMinHeight(): number {
+        // if split direction is NOT vertical
+        if (this.direction !== "vertical") {
+
+            // min-height is 0 (unset)
+            return 0;
+        }
+
+        // return the sum of all area minSizes + gutter sizes
+        return this.getMinSizeOfAllDisplayedComponentsPlusGutterSize();
+    }
+
     public ngAfterViewInit() {
         this.isViewInitialized = true;
+    }
+
+    /**
+     * Sum of all area minSizes + gutter sizes
+     *
+     * @returns {number}
+     */
+    private getMinSizeOfAllDisplayedComponentsPlusGutterSize(): number {
+        if (!this.displayedAreas || this.displayedAreas.length === 0) {
+            return 0;
+        }
+        return this.getMinSizeOfAllDisplayedComponents() + (this.gutterSize * (this.displayedAreas.length - 1));
+    }
+
+    /**
+     * Sum of all area minSizes
+     *
+     * @returns {number}
+     */
+    private getMinSizeOfAllDisplayedComponents(): number {
+        if (!this.displayedAreas || this.displayedAreas.length === 0) {
+            return 0;
+        }
+
+        let result = 0;
+
+        this.displayedAreas.forEach((area) => {
+            if (area.minSizePx) {
+                result += area.minSizePx;
+            }
+
+        });
+
+        return result;
     }
 
     private getNbGutters(): number {
@@ -446,10 +541,25 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
             }
         }
 
-        this.checkAndFixMinSizePxAreas();
+        // do the extra calculation
+        this.areaSizeCalculationToBeUsed.calculate(this.createAreaSizeCalculationOptions());
 
         this.refreshStyleSizes();
         this.cdRef.markForCheck();
+    }
+
+    /**
+     * Creates an AreaSizeCalculation-Object of currently set instance parameters
+     */
+    private createAreaSizeCalculationOptions(
+        calculationSource?: IAreaDragAndDropCalculationSource | IWindowResizeCalculationSource
+    ): IAreaSizeCalculationOptions {
+        return {
+            calculationSource,
+            containerSizePx: this.containerSizePx,
+            displayedAreas: this.displayedAreas,
+            gutterSizePx: this.gutterSize
+        };
     }
 
     /**
@@ -467,86 +577,15 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
          return result;
     }
 
-    /**
-     * Checks and fixes <split-area>-Components that have minSizePx configured
-     */
-    private checkAndFixMinSizePxAreas(): void {
-
-
-        // if we have one or zero displayed area(s)
-        if (this.displayedAreas.length <= 1) {
-            // there is nothing to check and fix
-            return;
-        }
-
-        const containerSizePixel = this.containerSizePx;
-        let percentOfAllAreas = 0;
-
-        this.displayedAreas.forEach((area) => {
-            // add percent-size to percent of all areas
-            percentOfAllAreas += area.size as number;
-        });
-
-        const displayedAreasWithSizeGreaterZero = this.displayedAreas.filter((a) => a.size !== 0);
-
-        displayedAreasWithSizeGreaterZero.forEach((area, index) => {
-            // if the (calculated) area size in pixels is smaller than its configured minSize
-            if (area.size * containerSizePixel <= (area.minSizePx as number)) {
-                const newAreaSize = area.minSizePx as number / containerSizePixel;
-                let diff = newAreaSize - area.size;
-                area.size = newAreaSize;
-
-                displayedAreasWithSizeGreaterZero.forEach((area, i) => {
-                    if (i <= index) {
-                        return;
-                    }
-
-                    if (area.size >= diff) {
-                        IMPLEMENT HERE!
-                    }
-                });
-            }
-        });
-
-        // areas that do not use min px size and have a size greater than 0
-        const areasThatDontUseMinPxSize = this.displayedAreas.filter((a) => !a.useMinPxSize && a.size > 0);
-
-        // how many areas are not using a min px size;
-        const areaCountToShareAvailableSpaceInPcnt = areasThatDontUseMinPxSize.length;
-
-        // every area that doesn't use min px size
-        areasThatDontUseMinPxSize.forEach((area) => {
-            // size of area = total percent / count of all areas that share the available space in percent
-            area.size = percentOfAllAreas / areaCountToShareAvailableSpaceInPcnt;
-        });
-    }
-
-    /**
-     * Returns the Pixels (sum) of all pixel sized areas
-     */
-    private getSumPxSizedAreas(): number {
-        let result: number = 0;
-
-        this.displayedAreas
-        // areas that are displayed in minSizePx
-        .filter((a) => a.useMinPxSize)
-        .forEach((area) => {
-            result += area.minSizePx as number;
-        });
-
-        return result;
-    }
 
     private refreshStyleSizes(): void {
         const sumGutterSize = this.getNbGutters() * this.gutterSize;
-        const sumPxSizedAreas = this.getSumPxSizedAreas();
 
         this.displayedAreas.forEach((area) => {
-            if (area.useMinPxSize) {
-                area.comp.setSizePx(area.minSizePx as number, this.direction);
-            } else {
-                area.comp.setStyleFlexbasis(`calc( ${ area.size * 100 }% - ${ area.size * (sumGutterSize + sumPxSizedAreas) }px )`, this.isDragging, this.direction);
-            }
+            area.comp.setStyleFlexbasis(
+                `calc( ${ area.size * 100 }% - ${ area.size * sumGutterSize }px )`,
+                this.isDragging
+            );
         });
     }
 
@@ -651,21 +690,6 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
         let newSizePixelA = this.dragStartValues.sizePixelA - offsetPixel;
         let newSizePixelB = this.dragStartValues.sizePixelB + offsetPixel;
 
-        // calculate completeSize of A and B
-        const completeSizePixel = newSizePixelA + newSizePixelB;
-
-        // A has minSizePx set
-        if (!!areaA.minSizePx && newSizePixelA <= areaA.minSizePx) {
-           newSizePixelA = areaA.minSizePx;
-           newSizePixelB = completeSizePixel - newSizePixelA;
-        }
-
-        // B has minSizePx set
-        if (!!areaB.minSizePx && newSizePixelB <= areaB.minSizePx) {
-            newSizePixelB = areaB.minSizePx;
-            newSizePixelA = completeSizePixel - newSizePixelB;
-         }
-
         if (newSizePixelA < this.gutterSize && newSizePixelB < this.gutterSize) {
             // WTF.. get out of here!
             return;
@@ -705,6 +729,13 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
             }
         }
 
+        this.areaSizeCalculationToBeUsed.calculate(
+            this.createAreaSizeCalculationOptions({
+                areaA,
+                areaB,
+                isDragAndDrop: true
+            })
+        );
         this.refreshStyleSizes();
         this.notify('progress');
     }
@@ -760,5 +791,14 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
 
     public ngOnDestroy(): void {
         this.stopDragging();
+    }
+
+    @HostListener('window:resize')
+    protected handleWindowResize(): void {
+        this.areaSizeCalculationToBeUsed.calculate(this.createAreaSizeCalculationOptions({
+            isWindowResize: true
+        }))
+        this.refreshStyleSizes();
+        this.cdRef.markForCheck();
     }
 }

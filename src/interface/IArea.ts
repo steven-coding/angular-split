@@ -4,6 +4,5 @@ export interface IArea {
     comp: SplitAreaDirective;
     size: number;
     minSizePx?: number;
-    useMinPxSize?: boolean;
     order: number;
 }
