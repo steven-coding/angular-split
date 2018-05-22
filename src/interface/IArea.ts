@@ -1,4 +1,4 @@
-import { SplitAreaDirective } from "../components/splitArea.directive";
+import { SplitAreaDirective } from "../components/split-area.directive";
 
 export interface IArea {
     comp: SplitAreaDirective;

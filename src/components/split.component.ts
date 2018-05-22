@@ -8,12 +8,16 @@ import 'rxjs/add/operator/debounceTime';
 
 import { IArea } from './../interface/IArea';
 import { IPoint } from './../interface/IPoint';
-import { SplitAreaDirective } from './splitArea.directive';
+import { SplitAreaDirective } from './split-area.directive';
 import {IAreaSizeCalculation} from "../interface/calculation/IAreaSizeCalculation";
 import {AreaSizeCalculation} from "./calculation/area-size-calculation";
 import {IAreaSizeCalculationOptions} from "../interface/calculation/IAreaSizeCalculationOptions";
-import {IAreaDragAndDropCalculationSource} from "../interface/calculation/calculation-sources/IAreaDragAndDropCalculationSource";
-import {IWindowResizeCalculationSource} from "../interface/calculation/calculation-sources/IWindowResizeCalculationSource";
+import {
+    IAreaDragAndDropCalculationSource
+} from "../interface/calculation/calculation-sources/IAreaDragAndDropCalculationSource";
+import {
+    IWindowResizeCalculationSource
+} from "../interface/calculation/calculation-sources/IWindowResizeCalculationSource";
 
 /**
  * angular-split

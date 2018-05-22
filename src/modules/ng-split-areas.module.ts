@@ -2,8 +2,8 @@ import { NgModule, ModuleWithProviders } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 import { SplitComponent } from '../components/split.component';
-import { SplitAreaDirective } from '../components/splitArea.directive';
-import { SplitGutterDirective } from '../components/splitGutter.directive';
+import { SplitAreaDirective } from '../components/split-area.directive';
+import { SplitGutterDirective } from '../components/split-gutter.directive';
 
 @NgModule({
     imports: [
@@ -19,18 +19,18 @@ import { SplitGutterDirective } from '../components/splitGutter.directive';
         SplitAreaDirective,
     ]
 })
-export class AngularSplitModule {
+export class NgSplitAreasModule {
 
     public static forRoot(): ModuleWithProviders {
         return {
-            ngModule: AngularSplitModule,
+            ngModule: NgSplitAreasModule,
             providers: []
         };
     }
 
     public static forChild(): ModuleWithProviders {
         return {
-            ngModule: AngularSplitModule,
+            ngModule: NgSplitAreasModule,
             providers: []
         };
     }

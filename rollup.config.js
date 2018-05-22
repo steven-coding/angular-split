@@ -16,7 +16,7 @@ export default {
     onwarn: () => { return },
     output: {
         format: 'umd',
-        name: 'ng.angularSplit',
+        name: 'ng.ngSplitAreas',
         globals: globals,
         sourcemap: true,
         exports: 'named'

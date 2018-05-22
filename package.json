@@ -1,10 +1,10 @@
 {
-    "name": "angular-split",
-    "version": "1.0.0-rc.3",
+    "name": "ng-split-areas",
+    "version": "0.1.0",
     "description": "Angular UI library used to split views and to allow dragging to resize the split areas using CSS flexbox layout.",
-    "main": "./bundles/angular-split.umd.js",
-    "module": "./esm5/angular-split.js",
-    "es2015": "./esm2015/angular-split.js",
+    "main": "./bundles/ng-split-areas.umd.js",
+    "module": "./esm5/ng-split-areas.js",
+    "es2015": "./esm2015/ng-split-areas.js",
     "scripts": {
         "build": "node build.js",
         "test": "karma start",
@@ -13,21 +13,22 @@
         "publish-lib:next": "npm publish --tag next ./dist",
         "test-app": "http-server"
     },
-    "typings": "./angular-split.d.ts",
-    "author": "bertrandg",
+    "typings": "./ng-split-areas.d.ts",
+    "author": "steven-coding",
     "repository": {
         "type": "git",
-        "url": "https://github.com/bertrandg/angular-split.git"
+        "url": "https://github.com/steven-coding/ng-split-areas.git"
     },
     "bugs": {
-        "url": "https://github.com/bertrandg/angular-split/issues"
+        "url": "https://github.com/steven-coding/ng-split-areas/issues"
     },
-    "homepage": "https://github.com/bertrandg/angular-split",
+    "homepage": "https://github.com/steven-coding/ng-split-areas",
     "keywords": [
         "angular",
         "split",
         "split-pane",
         "split-area",
+        "split-areas",
         "flexbox"
     ],
     "license": "Apache-2.0",
