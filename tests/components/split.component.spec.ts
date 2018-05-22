@@ -1,10 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { By }              from '@angular/platform-browser';
-import { DebugElement, Component }    from '@angular/core';
+import { By } from '@angular/platform-browser';
+import { DebugElement, Component } from '@angular/core';
 
 import { SplitComponent } from './../../src/components/split.component';
-import { SplitAreaDirective } from './../../src/components/splitArea.directive';
-import { SplitGutterDirective } from './../../src/components/splitGutter.directive';
+import { SplitAreaDirective } from './../../src/components/split-area.directive';
+import { SplitGutterDirective } from './../../src/components/split-gutter.directive';
 
 
 @Component({
