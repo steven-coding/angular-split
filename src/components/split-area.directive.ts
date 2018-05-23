@@ -52,6 +52,24 @@ export class SplitAreaDirective implements OnInit, OnDestroy {
 
 
     /**
+     * maximum size (in pixels) of the splitArea
+     */
+    private _maxSizePx: number;
+
+    /**
+     * maximum size (in pixels) of the splitArea
+     */
+    @Input() set maxSizePx(v: number) {
+        this._maxSizePx = v;
+
+        this.split.updateArea(this, false, true);
+    }
+
+    get maxSizePx(): number {
+        return this._maxSizePx;
+    }
+
+    /**
      * minimum size (in pixels) of the splitArea
      */
     private _minSizePx: number;
@@ -60,7 +78,6 @@ export class SplitAreaDirective implements OnInit, OnDestroy {
      * minimum size (in pixels) of the splitArea
      */
     @Input() set minSizePx(v: number) {
-        console.log("set minWidthPx", v);
         this._minSizePx = v;
 
         this.split.updateArea(this, false, true);

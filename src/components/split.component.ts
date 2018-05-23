@@ -322,6 +322,7 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
         const newArea: IArea = {
             comp,
             minSizePx: comp.minSizePx,
+            maxSizePx: comp.maxSizePx,
             order: 0,
             size: 0
         };
@@ -354,8 +355,11 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
         const item = this.displayedAreas.find((a) => a.comp === comp);
 
         if (item) {
-            // use minSizePx from the component
+            // use minSizePx of the component
             item.minSizePx = comp.minSizePx;
+
+            // use maxSizePx of the component
+            item.maxSizePx = comp.maxSizePx;
 
             this.build(resetOrders, resetSizes);
         }

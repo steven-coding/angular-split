@@ -156,6 +156,13 @@ export class AreaSizeCalculation implements IAreaSizeCalculation {
                 containerSize,
                 gutterSizePxPerVisibleComponent);
 
+        } else {
+            // subtracting size taken away from the area
+            result -= this.addSizeToArea(
+                area,
+                sizeToBeModified,
+                containerSize,
+                gutterSizePxPerVisibleComponent);
         }
 
         return result;
@@ -168,7 +175,7 @@ export class AreaSizeCalculation implements IAreaSizeCalculation {
      * @param sizeToBeSubtracted Size to be subtracted from the area
      * @param containerSize Size of the container
      * @param gutterSizePxPerVisibleComponent size of the gutter in px per visible component
-     * @returns subtracted size that was subtracted
+     * @returns size that was subtracted
      */
     private static subtractSizeFromArea(
         area: IArea,
@@ -228,6 +235,78 @@ export class AreaSizeCalculation implements IAreaSizeCalculation {
     }
 
     /**
+     * Adds size to the area by given size
+     *
+     * @param area Area to be added something to it's size
+     * @param sizeToBeAdded Size to be added to the area
+     * @param containerSize Size of the container
+     * @param gutterSizePxPerVisibleComponent size of the gutter in px per visible component
+     * @returns size that was subtracted
+     */
+    private static addSizeToArea(
+        area: IArea,
+        sizeToBeAdded: number,
+        containerSize: number,
+        gutterSizePxPerVisibleComponent: number): number {
+
+        // size that was added
+        let result: number = 0;
+
+        // if the areas size is 0
+        if (area.size === 0) {
+
+            // there's nothing to do
+            return result;
+        }
+
+        //maximum size to be added (default: Number.MAX_VALUE)
+        let maxSizeToBeAdded = Number.MAX_VALUE;
+
+        // area has a maximum pixel restriction
+        if (area.maxSizePx) {
+
+            // maximum size of area (in pcnt of container size)
+            const maxSizePcnt =
+                Math.ceil(area.maxSizePx + gutterSizePxPerVisibleComponent) / containerSize;
+
+            // if area size is already greater or equal max-size
+            if(area.size >= maxSizePcnt) {
+                // we cannot add any space to this area
+                maxSizeToBeAdded = 0;
+            } else {
+                // we can add the amount until the area reaches max size
+                maxSizeToBeAdded = maxSizePcnt - area.size;
+            }
+        }
+
+        // if there is no size available to be added
+        if (maxSizeToBeAdded === 0) {
+
+            // there's nothing to do
+            return result;
+        }
+
+        // size to be actually added to the area
+        let sizeToBeActuallyAdded = sizeToBeAdded;
+
+        // if the size to be added is > than the max size that can be added
+        if (sizeToBeActuallyAdded > maxSizeToBeAdded) {
+
+            // size to be added = max
+            sizeToBeAdded = maxSizeToBeAdded;
+        }
+
+        // add size to current area's size
+        area.size += sizeToBeAdded;
+
+        // set the result to the size added
+        result = sizeToBeAdded;
+
+        // return what was actually added to the area
+        return result;
+    }
+
+    /**
      * Calculates area sizes according to given IAreaSizeCalculationOptions
      */
     public calculate(opts: IAreaSizeCalculationOptions): void {
@@ -264,7 +343,7 @@ export class AreaSizeCalculation implements IAreaSizeCalculation {
             * (opts.containerSizePx ? opts.containerSizePx : 0);
 
         // check & fix min sizes of dragged areas
-        this.checkAndFixMinSizePxAreas({
+        this.checkAndFixSizePxRestrictions({
 
             // use complete size in px of both dragged areas as containerSizePx
             containerSizePx: draggedAreasSizePx,
@@ -281,22 +360,29 @@ export class AreaSizeCalculation implements IAreaSizeCalculation {
      * Calculates area sizes when the window:resize-event was triggered
      */
     protected handleWindowResize(opts: IAreaSizeCalculationOptions) {
-        return this.checkAndFixMinSizePxAreas(opts);
+        this.checkAndFixSizePxRestrictions(opts);
     }
 
     /**
      * Calculates area sizes for normal layouting (first display, area-list changes, ...)
      */
     protected handleNormalLayout(opts: IAreaSizeCalculationOptions) {
-        return this.checkAndFixMinSizePxAreas(opts);
+        this.checkAndFixSizePxRestrictions(opts);
+    }
+
+    protected checkAndFixSizePxRestrictions(opts: IAreaSizeCalculationOptions) {
+        //check and fix min-sizes
+        this.checkAndFixSizePxRestrictedAreas(opts, 'min');
+        //check and fix max-sizes
+        this.checkAndFixSizePxRestrictedAreas(opts, 'max');
     }
 
     /**
-     * Checks and fixes <split-area>-Components that have minSizePx configured
+     * Checks and fixes <split-area>-Components that have minSizePx / maxSizePx configured
      *
-     * @throws E-00001 - area sizes could not be calculated fixing minSizePx
+     * @throws E-00001 - area sizes could not be calculated fixing minSizePx / maxSizePx
      */
-    private checkAndFixMinSizePxAreas(opts: IAreaSizeCalculationOptions): void {
+    protected checkAndFixSizePxRestrictedAreas(opts: IAreaSizeCalculationOptions, restrictionProperty: 'min' | 'max'): void {
 
         // if we have one or zero displayed area(s)
         if (opts.displayedAreas.length <= 1) {
@@ -333,51 +419,98 @@ export class AreaSizeCalculation implements IAreaSizeCalculation {
         // iterate all displayed areas (with size > 0)
         displayedAreasWithSizeGreaterZero.forEach((area, index) => {
 
-            // if the (calculated) area size in pixels is smaller than its configured minSize
-            if (area.size * containerSizePixel <
-                Math.ceil(area.minSizePx as number + gutterSizePxPerVisibleComponent)) {
+            // new size of the current area (default: current size)
+            let newAreaSize = area.size;
 
-                // new size of the current area (-> min size in percent) =
-                //      it's configured min size in pixels / container size in pixels
-                const newAreaSize =
-                    Math.ceil(area.minSizePx as number + gutterSizePxPerVisibleComponent) / containerSizePixel;
+            //switch min-width / max-width calculation by parameter (restrictionProperty)
+            switch(restrictionProperty) {
+                case 'min':
+                    // if the (calculated) area size in pixels is smaller than its configured minSize
+                    if (area.size * containerSizePixel <
+                            Math.ceil(area.minSizePx as number + gutterSizePxPerVisibleComponent)) {
 
-                // space that needs to be taken away from other areas
-                const diff = area.size - newAreaSize;
+                        // new size of the current area (-> min size in percent) =
+                        //      it's configured min size in pixels / container size in pixels
+                        newAreaSize =
+                            Math.ceil(area.minSizePx as number + gutterSizePxPerVisibleComponent) / containerSizePixel;
+                    }
+                    break;
+
+                case 'max':
+                    // if the (calculated) area size in pixels is greater than its configured maxSize
+                    if (area.size * containerSizePixel >
+                        Math.ceil(area.maxSizePx as number + gutterSizePxPerVisibleComponent)) {
+
+                        // new size of the current area (-> max size in percent) =
+                        //      it's configured max size in pixels / container size in pixels
+                        newAreaSize =
+                            Math.ceil(area.maxSizePx as number + gutterSizePxPerVisibleComponent) / containerSizePixel;
+                    }
+                    break;
+            }
+
+            // if new size of the area differs from current size
+            if(newAreaSize !== area.size) {
+
+                // space that needs to be taken away / added from/to other areas
+                const sizeDiffToBeModifiedOnOtherAreas = area.size - newAreaSize;
 
                 // current area size = size respecting the minimum pixel size
                 area.size = newAreaSize;
 
-                const diffAfterCheckingRightSideComponents =
-                    AreaSizeCalculation.modifyAreaSizes(
-                        displayedAreasWithSizeGreaterZero,
-                        index,
-                        diff,
-                        containerSizePixel,
-                        gutterSizePxPerVisibleComponent,
-                        'right'
-                    );
+                if (sizeDiffToBeModifiedOnOtherAreas !== 0) {
+                    // remove/add space-diff from to/all available areas
+                    const diffAfterRemovingSpaceFromAreas = this.addAvailableSpaceToAreas(displayedAreasWithSizeGreaterZero, index, sizeDiffToBeModifiedOnOtherAreas, containerSizePixel, gutterSizePxPerVisibleComponent);
 
-                // if there is still some space to be modified left after checking right side components
-                if (diffAfterCheckingRightSideComponents !== 0) {
-                    const diffAfterCheckingLeftSideComponents =
-                        AreaSizeCalculation.modifyAreaSizes(
-                            displayedAreasWithSizeGreaterZero,
-                            index,
-                            diffAfterCheckingRightSideComponents,
-                            containerSizePixel,
-                            gutterSizePxPerVisibleComponent,
-                            'left'
-                        );
+                    // if there is still space left after checking all areas
+                    if (diffAfterRemovingSpaceFromAreas !== 0) {
 
-                    // if there is still space left after checking all components
-                    if (diffAfterCheckingLeftSideComponents !== 0) {
-
-                        // throw an error
-                        throw new Error("E-00001");
+                        // we add the diff to our current area to keep our layout consistent
+                        area.size += sizeDiffToBeModifiedOnOtherAreas;
                     }
                 }
             }
         });
+    }
+
+    /**
+     * Modifies areas adding available space
+     *
+     * @param areas list of areas to be modified
+     * @param sourceAreaIndex index of area that triggered modification (will not be modified [a second time])
+     * @param availableSpace size to be added / subtracted to / from areas within the list
+     * @param containerSizePixel size of the container in pixel
+     * @param gutterSizePxPerVisibleComponent size of the gutter in pixel per visible component
+     *
+     * @returns space left after adding/removing from/to all available areas
+     */
+    private addAvailableSpaceToAreas(areas: IArea[], sourceAreaIndex: number, availableSpace: number, containerSizePixel: number, gutterSizePxPerVisibleComponent: number): number {
+
+        // add/remove space from/to areas on the right side of source-area(-index)
+        let result =
+            AreaSizeCalculation.modifyAreaSizes(
+                areas,
+                sourceAreaIndex,
+                availableSpace,
+                containerSizePixel,
+                gutterSizePxPerVisibleComponent,
+                'right'
+            );
+
+        // if there is still some space to be added/removed left after checking right side areas
+        if (result !== 0) {
+            // add/remove space from/to areas on the left side of source-area(-index)
+            result =
+                AreaSizeCalculation.modifyAreaSizes(
+                    areas,
+                    sourceAreaIndex,
+                    result,
+                    containerSizePixel,
+                    gutterSizePxPerVisibleComponent,
+                    'left'
+                );
+        }
+
+        return result;
     }
 }
