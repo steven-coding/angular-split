@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 
 import { SplitComponent } from '../components/split.component';
 import { SplitAreaDirective } from '../components/split-area.directive';
-import { SplitGutterDirective } from '../components/split-gutter.directive';
+import { SplitGutterComponent } from '../components/split-gutter.component';
+import { SplitGutterDefaultDirective } from "../components/split-gutter-default.directive";
 
 @NgModule({
     imports: [
@@ -12,7 +13,8 @@ import { SplitGutterDirective } from '../components/split-gutter.directive';
     declarations: [
         SplitComponent,
         SplitAreaDirective,
-        SplitGutterDirective,
+        SplitGutterComponent,
+        SplitGutterDefaultDirective
     ],
     exports: [
         SplitComponent,

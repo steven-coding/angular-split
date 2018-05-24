@@ -4,7 +4,7 @@ import { DebugElement, Component } from '@angular/core';
 
 import { SplitComponent } from './../../src/components/split.component';
 import { SplitAreaDirective } from './../../src/components/split-area.directive';
-import { SplitGutterDirective } from './../../src/components/split-gutter.directive';
+import { SplitGutterComponent } from './../../src/components/split-gutter.component';
 
 
 @Component({
@@ -35,7 +35,7 @@ describe('TestComponent', () => {
                 TestComponent, 
                 SplitComponent, 
                 SplitAreaDirective, 
-                SplitGutterDirective,
+                SplitGutterComponent,
             ],
         });
 

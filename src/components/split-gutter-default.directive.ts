@@ -1,15 +1,12 @@
 import { Directive, Input, ElementRef, Renderer2 } from '@angular/core';
 
+/**
+ * Default gutter, when no custom-gutter is configured
+ */
 @Directive({
-    selector: 'split-gutter'
+    selector: 'split-gutter-default'
 })
-export class SplitGutterDirective {
-
-    @Input() set order(v: number) {
-        this.renderer.setStyle(this.elRef.nativeElement, 'order', v);
-    }
-    
-    ////
+export class SplitGutterDefaultDirective {
 
     private _direction: 'vertical' | 'horizontal';
     
@@ -20,17 +17,6 @@ export class SplitGutterDirective {
     
     get direction(): 'vertical' | 'horizontal' {
         return this._direction;
-    }
-    
-    ////
-
-    @Input() set useTransition(v: boolean) {
-        if(v) {
-            this.renderer.setStyle(this.elRef.nativeElement, 'transition', `flex-basis 0.3s`);
-        }
-        else {
-            this.renderer.removeStyle(this.elRef.nativeElement, 'transition');
-        }
     }
     
     ////
@@ -104,10 +90,7 @@ export class SplitGutterDirective {
                 private renderer: Renderer2) {}
 
     private refreshStyle(): void {
-        this.renderer.setStyle(this.elRef.nativeElement, 'flex-basis', `${ this.size }px`);
-        
-        // fix safari bug about gutter height when direction is horizontal
-        this.renderer.setStyle(this.elRef.nativeElement, 'height', (this.direction === 'vertical') ? `${ this.size }px` : `100%`);
+        this.renderer.setStyle(this.elRef.nativeElement, 'flex', `1 1 auto`);
 
         this.renderer.setStyle(this.elRef.nativeElement, 'background-color', (this.color !== '') ? this.color : `#eeeeee`);
 

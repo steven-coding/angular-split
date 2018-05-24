@@ -18,6 +18,7 @@ import {
 import {
     IWindowResizeCalculationSource
 } from "../interface/calculation/calculation-sources/IWindowResizeCalculationSource";
+import {Area} from "./models/area";
 
 /**
  * angular-split
@@ -72,14 +73,13 @@ import {
         }
 
         split-gutter {
+            display: flex;
             flex-grow: 0;
             flex-shrink: 0;
-            background-position: center center;
-            background-repeat: no-repeat;
         }
     `],
     template: `
-        <ng-content></ng-content>
+        <ng-content select="split-area"></ng-content>
         <ng-template ngFor let-area [ngForOf]="displayedAreas" let-index="index" let-last="last">
             <split-gutter *ngIf="last === false" 
                           [order]="index*2+1"
@@ -91,7 +91,9 @@ import {
                           [imageV]="gutterImageV"
                           [disabled]="disabled"
                           (mousedown)="startDragging($event, index*2+1, index+1)"
-                          (touchstart)="startDragging($event, index*2+1, index+1)"></split-gutter>
+                          (touchstart)="startDragging($event, index*2+1, index+1)">
+                <ng-content select="[template='gutter']"></ng-content>
+            </split-gutter>
         </ng-template>`
 })
 export class SplitComponent implements AfterViewInit, OnDestroy {
@@ -254,6 +256,11 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
     @Output() dragEnd = new EventEmitter<{gutterNum: number, sizes: Array<number>}>(false);
     @Output() gutterClick = new EventEmitter<{gutterNum: number, sizes: Array<number>}>(false);
 
+	/**
+	 * notifies size changes on an area
+	 */
+    @Output() public currentSizeChange = new EventEmitter<{areaIdx: number, size: number}>();
+
     private transitionEndInternal = new Subject<Array<number>>();
     @Output() transitionEnd = (<Observable<Array<number>>> this.transitionEndInternal.asObservable()).debounceTime(20);
 
@@ -319,13 +326,17 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
 
     public addArea(comp: SplitAreaDirective): void {
 
-        const newArea: IArea = {
+        const newArea: Area = new Area({
             comp,
             minSizePx: comp.minSizePx,
             maxSizePx: comp.maxSizePx,
             order: 0,
             size: 0
-        };
+        });
+
+        newArea.sizeChanged.subscribe(
+            (newSize: number) => this.fireSizeChanged(newArea, newSize * 100)
+        );
 
         if (comp.visible === true) {
             this.displayedAreas.push(newArea);
@@ -771,7 +782,6 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
         this.draggingWithoutMove = false;
     }
 
-
     public notify(type: 'start' | 'progress' | 'end' | 'click' | 'transitionEnd'): void {
         const areasSize: Array<number> = this.displayedAreas.map(a => a.size * 100);
 
@@ -793,6 +803,80 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
         }
     }
 
+    /**
+     * Moves the gutter to it's max position between two areas
+     *
+     * @param gutterOrderIndex Index of the gutter to be moved
+     */
+    public moveGutterMax(gutterOrderIndex: number) {
+        this.moveGutterToPosition(gutterOrderIndex, Number.MAX_VALUE);
+    }
+
+    /**
+     * Moves the gutter to it's min position between two areas
+     *
+     * @param gutterOrderIndex Index of the gutter to be moved
+     */
+    public moveGutterMin(gutterOrderIndex: number) {
+        this.moveGutterToPosition(gutterOrderIndex, 0);
+    }
+
+
+    /**
+     * Moves the gutter to given position in Pixels
+     *
+     * @param gutterOrderIndex Index of the gutter to be moved
+     * @param positionInPx new gutter position in px
+     */
+    public moveGutterToPosition(gutterOrderIndex: number, positionInPx: number) {
+        // area on left side of the gutter
+        const areaA = this.displayedAreas.find(a => a.order === gutterOrderIndex - 1);
+        // area on right side of the gutter
+        const areaB = this.displayedAreas.find(a => a.order === gutterOrderIndex + 1);
+
+        // if one of both areas couldn't be found
+        if(!areaA || !areaB) {
+            // the gutter in between can't be moved
+            return;
+        }
+
+        const sizePixelA: number = areaA.comp.getSizePixel( (this.direction === 'horizontal') ? 'offsetWidth' : 'offsetHeight');
+        const sizePixelB: number = areaB.comp.getSizePixel( (this.direction === 'horizontal') ? 'offsetWidth' : 'offsetHeight');
+        const totalSizePx: number = sizePixelA + sizePixelB;
+        const totalSizePcnt: number = areaA.size + areaB.size;
+
+        let newSizePixelA = positionInPx < totalSizePx ? positionInPx : totalSizePx;
+        let newSizePixelB = totalSizePx - newSizePixelA;
+
+
+        if (newSizePixelA < this.gutterSize && newSizePixelB < this.gutterSize) {
+            // WTF.. get out of here!
+            return;
+        }
+        else if(newSizePixelA < this.gutterSize) {
+            newSizePixelB += newSizePixelA;
+            newSizePixelA = 0;
+        }
+        else if(newSizePixelB < this.gutterSize) {
+            newSizePixelA += newSizePixelB;
+            newSizePixelB = 0;
+        }
+
+        areaA.size = newSizePixelA / totalSizePx * totalSizePcnt;
+        areaB.size = newSizePixelB / totalSizePx * totalSizePcnt;
+
+
+        // reuse drag-and-drop calculation (because it is like a "fast drag-and-drop")
+        this.areaSizeCalculationToBeUsed.calculate(
+            this.createAreaSizeCalculationOptions({
+                areaA,
+                areaB,
+                isDragAndDrop: true
+            })
+        );
+        this.refreshStyleSizes();
+    }
+
     public ngOnDestroy(): void {
         this.stopDragging();
     }
@@ -804,5 +888,12 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
         }))
         this.refreshStyleSizes();
         this.cdRef.markForCheck();
+    }
+
+    private fireSizeChanged(area: IArea, newSize: number) {
+        this.currentSizeChange.next({
+            size: newSize,
+            areaIdx: Math.floor(area.order / 2)
+        });
     }
 }

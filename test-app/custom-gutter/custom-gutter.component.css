@@ -1,0 +1,17 @@
+:host {
+    position: absolute;
+    left: 0; top: 0; right: 0; bottom: 0;
+    background-color: #eeeeee;
+
+    cursor: col-resize;
+    flex: 1 1 auto;
+}
+
+.action {
+    color: #808080;
+    cursor: pointer;
+}
+
+.action:hover {
+    color: black;
+}
