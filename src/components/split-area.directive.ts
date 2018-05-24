@@ -1,4 +1,4 @@
-import { Directive, Input, ElementRef, Renderer2, OnInit, OnDestroy, NgZone } from '@angular/core';
+import { Directive, Input, Output, ElementRef, EventEmitter, Renderer2, OnInit, OnDestroy, NgZone } from '@angular/core';
 
 import { SplitComponent } from './split.component';
 
@@ -107,10 +107,14 @@ export class SplitAreaDirective implements OnInit, OnDestroy {
         return this._visible;
     }
 
+    @Output() orderChange = new EventEmitter<number>();
+
     ////
 
     private transitionListener: Function;
     private readonly lockListeners: Array<Function> = [];
+
+    
 
     constructor(private ngZone: NgZone,
                 private elRef: ElementRef,
@@ -159,6 +163,7 @@ export class SplitAreaDirective implements OnInit, OnDestroy {
     }
 
     public setStyleOrder(value: number): void {
+        this.orderChange.next(value);
         this.renderer.setStyle(this.elRef.nativeElement, 'order', value);
     }
     

@@ -2,13 +2,16 @@
 <div class="split-container">
     <div class="absolute">
         <split #split direction="horizontal" [gutterSize]="24" (currentSizeChange)="handleAreaSizeChange($event)">
-            <split-area [minSizePx]="areas[0].minSizePx" [maxSizePx]="areas[0].maxSizePx">
+            <split-area [minSizePx]="areas[0].minSizePx" 
+                        [maxSizePx]="areas[0].maxSizePx" 
+                        (orderChange)="areas[0].order = $event">
                 <test-content>Content #1</test-content>
             </split-area>
-            <split-area>
+            <split-area (orderChange)="areas[1].order = $event">
                 <test-content>Content #2</test-content>
             </split-area>
-            <custom-gutter template="gutter"
+            <custom-gutter #gutter
+                            template="gutter"
                            (onMoveGutterMin)="split.moveGutterMin($event)"
                            (onMoveGutterMax)="split.moveGutterMax($event)"
                            (onShowBothAreas)="split.moveGutterToPosition($event, this.areas[$event-1].minSizePx)"

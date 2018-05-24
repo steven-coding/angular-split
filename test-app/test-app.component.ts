@@ -12,7 +12,15 @@ export class TestAppComponent {
         { minSizePx: 500, maxSizePx: 700 }, {}
     ];
 
-    public handleAreaSizeChange(event: {areaIdx: number, size: number}) {
-        this.areas[event.areaIdx].size = event.size;
+    public getAreaByOrder(order: number): IArea {
+        return this.areas.find((a) => a.order === order) as IArea;
+    }
+
+    public handleAreaSizeChange(event: {areaOrder: number, size: number}) {
+        const area = this.getAreaByOrder(event.areaOrder);
+
+        if (area) {
+            area.size = event.size;
+        }
     }
 }

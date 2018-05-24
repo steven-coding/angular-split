@@ -259,7 +259,7 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
 	/**
 	 * notifies size changes on an area
 	 */
-    @Output() public currentSizeChange = new EventEmitter<{areaIdx: number, size: number}>();
+    @Output() public currentSizeChange = new EventEmitter<{areaOrder: number, size: number}>();
 
     private transitionEndInternal = new Subject<Array<number>>();
     @Output() transitionEnd = (<Observable<Array<number>>> this.transitionEndInternal.asObservable()).debounceTime(20);
@@ -893,7 +893,7 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
     private fireSizeChanged(area: IArea, newSize: number) {
         this.currentSizeChange.next({
             size: newSize,
-            areaIdx: Math.floor(area.order / 2)
+            areaOrder: area.order
         });
     }
 }
