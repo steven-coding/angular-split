@@ -7,14 +7,15 @@
                         (orderChange)="areas[0].order = $event">
                 <test-content>Content #1</test-content>
             </split-area>
-            <split-area (orderChange)="areas[1].order = $event">
+            <split-area (orderChange)="areas[1].order = $event"
+                        [minSizePx]="areas[1].minSizePx" >
                 <test-content>Content #2</test-content>
             </split-area>
             <custom-gutter #gutter
                             template="gutter"
                            (onMoveGutterMin)="split.moveGutterMin($event)"
                            (onMoveGutterMax)="split.moveGutterMax($event)"
-                           (onShowBothAreas)="split.moveGutterToPosition($event, this.areas[$event-1].minSizePx)"
+                           (onShowBothAreas)="split.moveGutterToPosition($event, -1 * this.areas[1].minSizePx)"
             ></custom-gutter>
         </split>
     </div>

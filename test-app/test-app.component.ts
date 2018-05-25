@@ -9,7 +9,8 @@ import {IArea} from "../src/interface/IArea";
 })
 export class TestAppComponent {
     public areas: IArea[] = <any[]>[
-        { minSizePx: 500, maxSizePx: 700 }, {}
+        { minSizePx: 500, maxSizePx: 700 },
+        { minSizePx: 250 }
     ];
 
     public getAreaByOrder(order: number): IArea {

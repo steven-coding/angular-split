@@ -829,6 +829,7 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
      * @param positionInPx new gutter position in px
      */
     public moveGutterToPosition(gutterOrderIndex: number, positionInPx: number) {
+
         // area on left side of the gutter
         const areaA = this.displayedAreas.find(a => a.order === gutterOrderIndex - 1);
         // area on right side of the gutter
@@ -845,8 +846,33 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
         const totalSizePx: number = sizePixelA + sizePixelB;
         const totalSizePcnt: number = areaA.size + areaB.size;
 
-        let newSizePixelA = positionInPx < totalSizePx ? positionInPx : totalSizePx;
-        let newSizePixelB = totalSizePx - newSizePixelA;
+        let newSizePixelA = sizePixelA;
+        let newSizePixelB = sizePixelB;
+
+        // sizing left side component and right side component takes available space (=== true)
+        const isLeftSideSizing: boolean = positionInPx >= 0;
+
+        //sizing left side component, if positionInPx is > 0
+        if(isLeftSideSizing) {
+
+            // left side componen will be positionInPx or totalSizePx (if it is smaller than positionInPx)
+            newSizePixelA = positionInPx < totalSizePx ? positionInPx : totalSizePx;
+
+            // right side component will take space still available
+            newSizePixelB = totalSizePx - newSizePixelA;
+        }
+        //sizing right side component, if positionInPx is < 0
+        else {
+
+            // absolute size of required right side component width
+            const absolutePositionInPx = Math.abs(positionInPx);
+
+            // right side componen will be absolutePositionInPx or totalSizePx (if it is smaller than absolutePositionInPx)
+            newSizePixelB = absolutePositionInPx < totalSizePx ? absolutePositionInPx : totalSizePx;
+
+            // left side component will take space still available
+            newSizePixelA = totalSizePx - newSizePixelB;
+        }
 
 
         if (newSizePixelA < this.gutterSize && newSizePixelB < this.gutterSize) {
@@ -865,12 +891,27 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
         areaA.size = newSizePixelA / totalSizePx * totalSizePcnt;
         areaB.size = newSizePixelB / totalSizePx * totalSizePcnt;
 
+        let draggedAreas: IArea[] = [];
+
+        // component sizes will be checked / corrected in given order
+        // if gutter movement is negative (= sizing area B)
+        if(!isLeftSideSizing) {
+
+            // areaB size should be checked / fixed first and diff space will be taken from areaA
+            draggedAreas = [areaB, areaA];
+
+        } else {
+
+            // areaA size should be checked / fixed first and diff space will be taken from areaB
+            draggedAreas = [areaA, areaB];
+        }
+
 
         // reuse drag-and-drop calculation (because it is like a "fast drag-and-drop")
         this.areaSizeCalculationToBeUsed.calculate(
             this.createAreaSizeCalculationOptions({
-                areaA,
-                areaB,
+                areaA: draggedAreas[0],
+                areaB: draggedAreas[1],
                 isDragAndDrop: true
             })
         );
