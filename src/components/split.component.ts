@@ -410,7 +410,10 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
      * Min-Width of the container
      */
     @HostBinding("style.min-width.px")
-    public get containerMinWidth(): number {
+    public get containerMinWidth(): number | undefined {
+        if(!this.setMinSizeOnContainer)
+            return undefined;
+
         // if split direction is NOT vertical
         if (this.direction !== "horizontal") {
 
@@ -426,7 +429,10 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
      * Min-Height of the container
      */
     @HostBinding("style.min-height.px")
-    public get containerMinHeight(): number {
+    public get containerMinHeight(): number | undefined {
+        if(!this.setMinSizeOnContainer)
+            return undefined;
+
         // if split direction is NOT vertical
         if (this.direction !== "vertical") {
 
@@ -442,6 +448,8 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
         this.isViewInitialized = true;
     }
 
+    @Input() public setMinSizeOnContainer: boolean = false;
+
     /**
      * Sum of all area minSizes + gutter sizes
      */
@@ -449,6 +457,7 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
         if (!this.displayedAreas || this.displayedAreas.length === 0) {
             return 0;
         }
+
         return this.getMinSizeOfAllDisplayedComponents() + (this.gutterSize * (this.displayedAreas.length - 1));
     }
 

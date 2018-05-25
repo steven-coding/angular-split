@@ -1,7 +1,11 @@
 <h1>TestAppComponent (test-app.component.html)</h1>
 <div class="split-container">
     <div class="absolute">
-        <split #split direction="horizontal" [gutterSize]="24" (currentSizeChange)="handleAreaSizeChange($event)">
+        <split #split direction="horizontal"
+               [gutterSize]="24"
+               (currentSizeChange)="handleAreaSizeChange($event)"
+               [areaSizeCalculation]="splitLayoutLogic"
+               [style.min-width.px]="areas[0].minSizePx + 24">
             <split-area [minSizePx]="areas[0].minSizePx" 
                         [maxSizePx]="areas[0].maxSizePx" 
                         (orderChange)="areas[0].order = $event">

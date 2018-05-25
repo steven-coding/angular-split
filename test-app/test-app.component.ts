@@ -1,5 +1,6 @@
 import {Component} from '@angular/core';
 import {IArea} from "../src/interface/IArea";
+import {TwoColumnSplitLayoutLogic} from "./two-column-split-layout-logic";
 
 @Component({
     moduleId: module.id,
@@ -8,6 +9,8 @@ import {IArea} from "../src/interface/IArea";
     templateUrl: 'test-app.component.html'
 })
 export class TestAppComponent {
+    public splitLayoutLogic = new TwoColumnSplitLayoutLogic();
+
     public areas: IArea[] = <any[]>[
         { minSizePx: 500, maxSizePx: 700 },
         { minSizePx: 250 }
