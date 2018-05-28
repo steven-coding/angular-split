@@ -317,6 +317,11 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
         sizePercentB: 0,
     };
 
+	/**
+	 * last checked container with for not handling resize-events multiple times
+	 */
+    private lastCheckedContainerSizePx: number;
+
     constructor(private ngZone: NgZone,
                 private elRef: ElementRef,
                 private cdRef: ChangeDetectorRef,
@@ -609,6 +614,9 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
                 this.isDragging
             );
         });
+
+		//trigger resize-event - components can handle it and react to new sizes accordingly
+        this.triggerWindowResize();
     }
 
     public startDragging(startEvent: MouseEvent | TouchEvent, gutterOrder: number, gutterNum: number): void {
@@ -933,9 +941,18 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
 
     @HostListener('window:resize')
     protected handleWindowResize(): void {
+        // if container size remains the same as the size we have checked
+        if(this.lastCheckedContainerSizePx === this.containerSizePx) {
+            //there is nothing to do
+            return;
+        }
+
+        this.lastCheckedContainerSizePx = this.containerSizePx;
+
         this.areaSizeCalculationToBeUsed.calculate(this.createAreaSizeCalculationOptions({
             isWindowResize: true
-        }))
+        }));
+
         this.refreshStyleSizes();
         this.cdRef.markForCheck();
     }
@@ -945,5 +962,22 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
             size: newSize,
             areaOrder: area.order
         });
+    }
+
+    /**
+     * Triggers the window-resize event, so component inside the (resized) areas can re-layout with given widths / heights
+     */
+    private triggerWindowResize() {
+        // save current sizePx, so we don't check the sizes within handleWindowResize again
+        this.lastCheckedContainerSizePx = this.containerSizePx;
+
+        try {
+            // For a full list of event types: https://developer.mozilla.org/en-US/docs/Web/API/document.createEvent
+            var event = document.createEvent('HTMLEvents');
+            event.initEvent('resize', true, false);
+            window.dispatchEvent(event);
+        } catch(error) {
+            console.warn("triggerWindowResize", error);
+        }
     }
 }
