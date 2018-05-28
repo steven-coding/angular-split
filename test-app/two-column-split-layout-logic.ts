@@ -25,8 +25,6 @@ export class TwoColumnSplitLayoutLogic implements IAreaSizeCalculation {
         if(!opts || !opts.displayedAreas || opts.displayedAreas.length != 2)
             return;
 
-        console.log("doLayout", opts.displayedAreas);
-
         const containerSizePx = opts.containerSizePx as number;
         const gutterSizePx = opts.gutterSizePx as number;
         const displayedAreaCount = opts.displayedAreas ? opts.displayedAreas.length : 0;
@@ -78,7 +76,5 @@ export class TwoColumnSplitLayoutLogic implements IAreaSizeCalculation {
             opts.displayedAreas[0].size += availableSpacePx / totalAvailableSpacePx;
             availableSpacePx = 0;
         }
-
-        console.log("splitLayout", totalAvailableSpacePx + " = " + opts.displayedAreas[0].size * totalAvailableSpacePx + " + " + opts.displayedAreas[1].size * totalAvailableSpacePx);
     }
 }

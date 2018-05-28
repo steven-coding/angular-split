@@ -614,9 +614,6 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
                 this.isDragging
             );
         });
-
-		//trigger resize-event - components can handle it and react to new sizes accordingly
-        this.triggerWindowResize();
     }
 
     public startDragging(startEvent: MouseEvent | TouchEvent, gutterOrder: number, gutterNum: number): void {
@@ -797,6 +794,9 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
 
         this.isDragging = false;
         this.draggingWithoutMove = false;
+
+        //trigger resize-event - components can handle it and react to new sizes accordingly
+        this.triggerWindowResize();
     }
 
     public notify(type: 'start' | 'progress' | 'end' | 'click' | 'transitionEnd'): void {
@@ -955,6 +955,9 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
 
         this.refreshStyleSizes();
         this.cdRef.markForCheck();
+
+        //trigger resize-event - components can handle it and react to new sizes accordingly
+        this.triggerWindowResize();
     }
 
     private fireSizeChanged(area: IArea, newSize: number) {
@@ -968,6 +971,7 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
      * Triggers the window-resize event, so component inside the (resized) areas can re-layout with given widths / heights
      */
     private triggerWindowResize() {
+
         // save current sizePx, so we don't check the sizes within handleWindowResize again
         this.lastCheckedContainerSizePx = this.containerSizePx;
 
