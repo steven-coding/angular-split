@@ -342,6 +342,39 @@ export class AreaSizeCalculation implements IAreaSizeCalculation {
         const draggedAreasSizePx = (areaDragAndDrop.areaA.size + areaDragAndDrop.areaB.size)
             * (opts.containerSizePx ? opts.containerSizePx : 0);
 
+        // both areas are visible after drag (size > 0) and the gutter was moved from it's original position
+        if(areaDragAndDrop.areaA.size > 0 && areaDragAndDrop.areaB.size > 0 && areaDragAndDrop.offsetPixel) {
+
+            // both areas (left side and right side) have min size px configured
+            if(areaDragAndDrop.areaA.minSizePx && areaDragAndDrop.areaB.minSizePx) {
+
+                // sum of min-size of both areas
+                const totalMinSizePx: number = areaDragAndDrop.areaA.minSizePx + areaDragAndDrop.areaB.minSizePx;
+
+                // size in px that can be used by the components (=> without gutter size)
+                const draggedAreasSizePxWithoutGutter: number = draggedAreasSizePx - (opts.gutterSizePx ? opts.gutterSizePx : 0);
+
+                // both components won't fit into given size (because the sum of their min-sizes is > total available space)
+                if(totalMinSizePx > draggedAreasSizePxWithoutGutter)
+                {
+                    // gutter was moved left (-> offsetPixel = start - end = a positive number)
+                    if(areaDragAndDrop.offsetPixel > 0) {
+                        //left side wins
+                        areaDragAndDrop.areaA.size += areaDragAndDrop.areaB.size;
+                        //right side is reset to 0
+                        areaDragAndDrop.areaB.size = 0;
+                    }
+                    else if(areaDragAndDrop.offsetPixel < 0) { // gutter was moved right (-> offsetPixel = start - end = a negative number)
+                        //right side wins
+                        areaDragAndDrop.areaB.size += areaDragAndDrop.areaA.size;
+                        //left side is reset to 0
+                        areaDragAndDrop.areaA.size = 0;
+                    }
+
+                }
+            }
+        }
+
         // check & fix min sizes of dragged areas
         this.checkAndFixSizePxRestrictions({
 

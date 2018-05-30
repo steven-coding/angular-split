@@ -20,4 +20,12 @@ export interface IAreaDragAndDropCalculationSource {
      * right side area of dragged gutter
      */
     areaB: IArea;
+
+    /**
+     * distance in pixel that the splitter was moved from it's original position
+     *
+     * @example gutter was moved left from x = 200 to x = 150 - offsetPixel will be (xStart - xEnd = 50)
+     *
+     */
+    offsetPixel: number;
 }

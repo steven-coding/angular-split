@@ -762,7 +762,8 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
             this.createAreaSizeCalculationOptions({
                 areaA,
                 areaB,
-                isDragAndDrop: true
+                isDragAndDrop: true,
+                offsetPixel
             })
         );
         this.refreshStyleSizes();
@@ -929,7 +930,8 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
             this.createAreaSizeCalculationOptions({
                 areaA: draggedAreas[0],
                 areaB: draggedAreas[1],
-                isDragAndDrop: true
+                isDragAndDrop: true,
+                offsetPixel: positionInPx,
             })
         );
         this.refreshStyleSizes();
