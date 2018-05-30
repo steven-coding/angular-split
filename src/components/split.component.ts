@@ -892,7 +892,6 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
             newSizePixelA = totalSizePx - newSizePixelB;
         }
 
-
         if (newSizePixelA < this.gutterSize && newSizePixelB < this.gutterSize) {
             // WTF.. get out of here!
             return;
@@ -924,6 +923,8 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
             draggedAreas = [areaA, areaB];
         }
 
+        //drag-offset in pixel = size of areaA in px before resizing - size of areaA in px after resizing
+        const pseudoDragOffset = sizePixelA - newSizePixelA;
 
         // reuse drag-and-drop calculation (because it is like a "fast drag-and-drop")
         this.areaSizeCalculationToBeUsed.calculate(
@@ -931,7 +932,7 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
                 areaA: draggedAreas[0],
                 areaB: draggedAreas[1],
                 isDragAndDrop: true,
-                offsetPixel: positionInPx,
+                offsetPixel: pseudoDragOffset,
             })
         );
         this.refreshStyleSizes();

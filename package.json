@@ -1,6 +1,6 @@
 {
     "name": "ng-split-areas",
-    "version": "0.2.6",
+    "version": "0.2.7",
     "description": "Splitting views in Angular horizontally / vertically with configurable size-restrictions",
     "main": "./bundles/ng-split-areas.umd.js",
     "module": "./esm5/ng-split-areas.js",
