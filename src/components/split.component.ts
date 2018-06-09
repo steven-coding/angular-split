@@ -845,6 +845,8 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
      *
      * @param gutterOrderIndex Index of the gutter to be moved
      * @param positionInPx new gutter position in px
+     *
+     * @version 0.2.8 triggers Window-Resize
      */
     public moveGutterToPosition(gutterOrderIndex: number, positionInPx: number) {
 
@@ -936,6 +938,7 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
             })
         );
         this.refreshStyleSizes();
+        this.triggerWindowResize();
     }
 
     public ngOnDestroy(): void {
