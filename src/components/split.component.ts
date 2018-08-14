@@ -946,7 +946,7 @@ export class SplitComponent implements AfterViewInit, OnDestroy {
     }
 
     @HostListener('window:resize')
-    protected handleWindowResize(): void {
+    public handleWindowResize(): void {
         // if container size remains the same as the size we have checked
         if(this.lastCheckedContainerSizePx === this.containerSizePx) {
             //there is nothing to do
