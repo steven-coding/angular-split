@@ -3,7 +3,7 @@
         "baseUrl": ".",
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
-        "strict": true,
+        "strict": false,
         "module": "commonjs",
         "moduleResolution": "node",
         "rootDir": ".",

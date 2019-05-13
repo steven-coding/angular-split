@@ -427,16 +427,6 @@ export class AreaSizeCalculation implements IAreaSizeCalculation {
         // size of the container in pixel (= available space in px)
         const containerSizePixel: number = opts.containerSizePx ? opts.containerSizePx : 0;
 
-        // sum percent of all areas (100% or less?)
-        let percentOfAllAreas: number = 0;
-
-        // iterate all displayed areas
-        opts.displayedAreas.forEach((area) => {
-
-            // sum percent-size of each area
-            percentOfAllAreas += area.size ? area.size : 0;
-        });
-
         // areas with a size > 0
         const displayedAreasWithSizeGreaterZero = opts.displayedAreas.filter((a) => a.size !== 0);
 

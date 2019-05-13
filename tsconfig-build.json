@@ -9,7 +9,7 @@
         },
         "outDir": "dist",
         "declaration": true,
-        "strict": true,
+        "strict": false,
         "moduleResolution": "node",
         "module": "es2015",
         "target": "es2015",
@@ -30,7 +30,6 @@
     ],
     "angularCompilerOptions": {
         "skipTemplateCodegen": true,
-        "annotateForClosureCompiler": true,
         "strictMetadataEmit": true,
         "flatModuleOutFile": "ng-split-areas.js",
         "flatModuleId": "ng-split-areas"

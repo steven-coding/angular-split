@@ -21,7 +21,14 @@ System.config({
         'src': {
             defaultExtension: 'js'
         },
-        'rxjs': {},
+        rxjs: {
+            defaultExtension: 'js', main: "index.js"
+        },
+        "rxjs/operators": { "main": "index.js", "defaultExtension": "js" },
+        "rxjs/internal-compatibility": { "main": "index.js", "defaultExtension": "js" },
+        "rxjs/testing": { "main": "index.js", "defaultExtension": "js" },
+        'rxjs/ajax': { main: 'index.js', defaultExtension: 'js' },
+        'rxjs/webSocket': { main: 'index.js', defaultExtension: 'js' },
         'core-js': {},
         'zone.js': {}
     }

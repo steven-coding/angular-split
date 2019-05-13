@@ -21,7 +21,7 @@ export class Area implements IArea {
             this.sizeChanged.next(value);
         }
     }
-    comp: SplitAreaDirective;
+    comp?: SplitAreaDirective;
     maxSizePx?: number;
     minSizePx?: number;
     order: number;

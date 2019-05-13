@@ -1,9 +1,9 @@
 import { SplitAreaDirective } from "../components/split-area.directive";
 
 export interface IArea {
-    comp: SplitAreaDirective;
-    size: number;
+    comp?: SplitAreaDirective;
+    size?: number;
     minSizePx?: number;
     maxSizePx?: number;
-    order: number;
+    order?: number;
 }
